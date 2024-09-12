@@ -104,7 +104,9 @@ describe('auth service', () => {
       const invalidToken = 'invalid token'
       const result = await authService.refreshToken(invalidToken)
       expect(result.response.status).toBe('fail')
-      expect(result.response.errors?.message).toBe('invalid refresh token')
+      if (result.response.status === 'fail') {
+        expect(result.response.errors.message).toBe('invalid refresh token')
+      }
     })
 
     it('should fail caused token not found in db', async () => {
@@ -120,9 +122,11 @@ describe('auth service', () => {
       expect(authRepo.getTokenByUserId).toHaveBeenCalled()
       expect(result).not.toHaveProperty('token')
       expect(result.response.status).toBe('fail')
-      expect(result.response.errors?.message).toBe(
-        'token not found in database',
-      )
+      if (result.response.status === 'fail') {
+        expect(result.response.errors.message).toBe(
+          'token not found in database',
+        )
+      }
     })
 
     it('should fail caused token is not the same with in db', async () => {
@@ -145,7 +149,9 @@ describe('auth service', () => {
       expect(authRepo.getTokenByUserId).toHaveBeenCalled()
       expect(result).not.toHaveProperty('token')
       expect(result.response.status).toBe('fail')
-      expect(result.response.errors?.message).toBe('invalid refresh token')
+      if (result.response.status === 'fail') {
+        expect(result.response.errors.message).toBe('invalid refresh token')
+      }
     })
   })
 })
