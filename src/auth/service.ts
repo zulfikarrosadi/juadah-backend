@@ -1,6 +1,7 @@
 import { Auth } from '../lib/Auth'
 import { AuthCredentialError } from '../lib/Error'
 import type ApiResponse from '../schema'
+import type { FailResponse, SuccessResponse } from '../schema'
 import type { Login } from './schema'
 
 interface User {
@@ -25,7 +26,7 @@ class AuthService extends Auth {
   }
 
   async login(data: Login): Promise<{
-    response: ApiResponse
+    response: ApiResponse<SuccessResponse, FailResponse>
     token?: { accessToken: string; refreshToken: string }
   }> {
     try {
@@ -89,7 +90,10 @@ class AuthService extends Auth {
 
   async refreshToken(
     token: string,
-  ): Promise<{ response: ApiResponse; token?: string }> {
+  ): Promise<{
+    response: ApiResponse<SuccessResponse, FailResponse>
+    token?: string
+  }> {
     try {
       const { decodedData } = this.verifyToken(token)
 
