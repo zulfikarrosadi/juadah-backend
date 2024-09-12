@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npx jest",
     "dev": "npx ts-node-dev --respawn --transpile-only src/index.ts",
     "lint": "npx biome lint ./src",
     "fix-lint": "npx biome lint --write --unsafe ./src",
