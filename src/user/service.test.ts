@@ -37,9 +37,13 @@ describe('user service', () => {
 
       expect(userRepo.createUser).toHaveBeenCalled()
       expect(newUser.response.status).toBe('success')
-      expect(newUser.response.data.user.id).toBe(1)
-      expect(newUser.response.data.user.email).toBe(VALID_EMAIL)
       expect(newUser).toHaveProperty('token')
+      expect(newUser.response).toEqual({
+        status: 'success',
+        data: {
+          user: { id: 1, email: VALID_EMAIL, fullname: FULLNAME },
+        },
+      })
       expect(newUser.token?.accessToken).not.toBeNull()
       expect(newUser.token?.refreshToken).not.toBeNull()
     })
@@ -56,7 +60,7 @@ describe('user service', () => {
       expect(newUser.response.status).toBe('fail')
       if (newUser.response.status === 'fail') {
         expect(newUser.response.errors.message).toBe(
-          'this username already exists',
+          'this email already exists',
         )
       }
     })
@@ -90,8 +94,16 @@ describe('user service', () => {
       const user = await userService.getUserById('1')
 
       expect(user.response.status).toBe('success')
-      expect(user.response.data.user.id).toBe(1)
-      expect(user.response.data.user.username).toBe('testing_username')
+      expect(user.response).toEqual({
+        status: 'success',
+        data: {
+          user: {
+            id: 1,
+            email: VALID_EMAIL,
+            fullname: FULLNAME,
+          },
+        },
+      })
     })
   })
 })
