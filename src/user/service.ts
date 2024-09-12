@@ -31,7 +31,7 @@ class UserSerivce extends Auth {
       })
 
       const user = await this.repo.getUserById(newUser.userId)
-      if (!user.email || !user.fullname || !user.password) {
+      if (!user.email || !user.fullname) {
         throw new Error('create user is fail, please try again')
       }
 
@@ -84,7 +84,7 @@ class UserSerivce extends Auth {
       return {
         response: {
           status: 'success',
-          data: { user: { id, fullname: user.fullname } },
+          data: { user: { id, fullname: user.fullname, email: user.email } },
         },
       }
     } catch (error: any) {
