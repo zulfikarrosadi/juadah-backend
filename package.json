@@ -1,50 +1,52 @@
 {
-	"name": "juadah-backend",
-	"version": "1.0.0",
-	"main": "index.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": "npx ts-node-dev --respawn --transpile-only src/index.ts",
-		"lint": "npx biome lint ./src",
-		"fix-lint": "npx biome lint --write --unsafe ./src",
-		"format": "npx biome format --write ./src",
-		"prepare": "husky"
-	},
-	"lint-staged": {
-		"*": [
-			"biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
-		]
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"description": "",
-	"dependencies": {
-		"bcrypt": "^5.1.1",
-		"cookie-parser": "^1.4.6",
-		"cors": "^2.8.5",
-		"dotenv": "^16.4.5",
-		"express": "^4.20.0",
-		"jsonwebtoken": "^9.0.2",
-		"multer": "^1.4.5-lts.1",
-		"mysql2": "^3.11.2",
-		"xss-filters": "^1.2.7",
-		"zod": "^3.23.8"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^1.8.3",
-		"@types/bcrypt": "^5.0.2",
-		"@types/cookie-parser": "^1.4.7",
-		"@types/cors": "^2.8.17",
-		"@types/express": "^4.17.21",
-		"@types/jsonwebtoken": "^9.0.6",
-		"@types/multer": "^1.4.12",
-		"@types/node": "^22.5.4",
-		"@types/xss-filters": "^0.0.30",
-		"husky": "^9.1.5",
-		"jest": "^29.7.0",
-		"lint-staged": "^15.2.10",
-		"ts-node-dev": "^2.0.0",
-		"typescript": "^5.6.2"
-	}
+  "name": "juadah-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx ts-node-dev --respawn --transpile-only src/index.ts",
+    "lint": "npx biome lint ./src",
+    "fix-lint": "npx biome lint --write --unsafe ./src",
+    "format": "npx biome format --write ./src",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": [
+      "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.20.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.2",
+    "xss-filters": "^1.2.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.5.4",
+    "@types/xss-filters": "^0.0.30",
+    "husky": "^9.1.5",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.2.10",
+    "ts-jest": "^29.2.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.6.2"
+  }
 }
