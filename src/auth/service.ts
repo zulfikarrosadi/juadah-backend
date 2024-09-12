@@ -11,7 +11,7 @@ interface User {
 }
 
 interface AuthRepository {
-  getUserByEmail(email: string): Promise<User>
+  getUserByEmail(email: string): Promise<Partial<User>>
   saveTokenToDb(
     token: string,
     userId: number,
@@ -30,6 +30,9 @@ class AuthService extends Auth {
   }> {
     try {
       const user = await this.repository.getUserByEmail(data.email)
+      if (!user.password || !user.email || !user.id || !user.fullname) {
+        throw new AuthCredentialError()
+      }
       const isPasswordMatch = await this.verifyPassword(
         data.password,
         user.password,
