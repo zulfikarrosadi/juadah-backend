@@ -1,4 +1,4 @@
-import type { Pool, RowDataPacket } from 'mysql2/promise'
+import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { AuthCredentialError } from '../lib/Error'
 
 type User = {
@@ -36,7 +36,7 @@ class AuthRepository {
       [token, userId],
     )
 
-    return rows
+    return rows as ResultSetHeader
   }
 
   async getTokenByUserId(userId: number) {
