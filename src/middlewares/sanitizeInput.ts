@@ -7,7 +7,7 @@ function sanitizeInput(req: Request, res: Response, next: NextFunction) {
       return xssFilters.inHTMLData(input)
     }
     for (const key in input) {
-      if (input.hasOwn(key)) {
+      if (Object.prototype.hasOwnProperty.call(input, key)) {
         input[key] = sanitize(input[key])
       }
     }
