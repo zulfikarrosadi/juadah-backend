@@ -10,6 +10,10 @@ import AuthHandler from './auth/handler'
 import AuthRepository from './auth/repository'
 import AuthService from './auth/service'
 import sanitizeInput from './middlewares/sanitizeInput'
+import ProductHandler from './product/handler'
+import ProductRepository from './product/repository'
+import { createProduct } from './product/schema'
+import ProductService from './product/service'
 import UserHandler from './user/handler'
 import UserRepository from './user/repository'
 import UserSerivce from './user/service'
@@ -22,6 +26,10 @@ export default function routes(app: Express) {
   const userRepo = new UserRepository(connection)
   const userService = new UserSerivce(userRepo)
   const userHandler = new UserHandler(userService)
+
+  const productRepo = new ProductRepository(connection)
+  const productService = new ProductService(productRepo)
+  const productHandler = new ProductHandler(productService)
 
   app.use(sanitizeInput)
   app.post(
@@ -37,4 +45,10 @@ export default function routes(app: Express) {
   app.use(requiredLogin)
   app.get('/api/users', userHandler.getCurrentUser)
   app.get('/api/users/:id', userHandler.getUserById)
+
+  app.post(
+    '/api/products',
+    validateInput(createProduct),
+    productHandler.createProduct,
+  )
 }
