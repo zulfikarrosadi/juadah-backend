@@ -11,3 +11,11 @@ export class EmailAlreadyExistsError extends Error {
 }
 
 export class NotFoundError extends Error {}
+
+export class ServerError extends Error {
+  public code: number
+  constructor(message: string) {
+    super(message)
+    this.code = 500
+  }
+}

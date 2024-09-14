@@ -64,8 +64,8 @@ class UserSerivce extends Auth {
         response: {
           status: 'fail',
           errors: {
-            code: 400,
-            message: error.message,
+            code: typeof error.code === 'number' ? error.code : 400,
+            message: error.message || error,
           },
         },
       }
