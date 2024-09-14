@@ -52,6 +52,7 @@ class AuthService extends Auth {
         email: user.email,
         userId: user.id,
       })
+      this.repository.saveTokenToDb(refreshToken, user.id)
 
       return {
         response: {
@@ -88,9 +89,7 @@ class AuthService extends Auth {
     }
   }
 
-  async refreshToken(
-    token: string,
-  ): Promise<{
+  async refreshToken(token: string): Promise<{
     response: ApiResponse<SuccessResponse, FailResponse>
     token?: string
   }> {
