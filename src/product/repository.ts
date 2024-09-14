@@ -8,7 +8,7 @@ class ProductRepository {
   async createProduct(data: CreateProduct) {
     const [rows] = await this.db.execute(
       'INSERT INTO products (name, description, price, image) VALUES(?,?,?,?)',
-      [data.name, data.description, data.price, data.image],
+      [data.name, data.description, data.price, data.image || ''],
     )
 
     const result = rows as ResultSetHeader
