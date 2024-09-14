@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: ["dev"]
 
+env:
+  MYSQL_ROOT_PASSWORD: ${{secrets.MYSQL_ROOT_PASSWORD}}
+  TOKEN_SECRET: ${{secrets.TOKEN_SECRET}}
+
 jobs:
   test:
     runs-on: ubuntu-latest
