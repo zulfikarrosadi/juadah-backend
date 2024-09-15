@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
   name VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
   price float NOT NULL,
-  image VARCHAR(255)
+  images JSON
 );
 
 CREATE TABLE IF NOT EXISTS ratings (

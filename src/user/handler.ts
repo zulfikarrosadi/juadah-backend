@@ -1,25 +1,22 @@
 import type { Request, Response } from 'express'
 import { accessTokenMaxAge, refreshTokenMaxAge } from '../lib/token'
 import type ApiResponse from '../schema'
-import type { FailResponse, SuccessResponse } from '../schema'
-import type { User } from './schema'
+import type { CreateUser, User } from './schema'
 
 interface UserService {
-  registerUser(data: User): Promise<{
-    response: ApiResponse<SuccessResponse, FailResponse>
+  registerUser(data: CreateUser): Promise<{
+    response: ApiResponse<User>
     token?: { accessToken: string; refreshToken: string }
   }>
-  getUserById(
-    idFromUrlPath: string,
-  ): Promise<{ response: ApiResponse<SuccessResponse, FailResponse> }>
+  getUserById(idFromUrlPath: string): Promise<{ response: ApiResponse<User> }>
 }
 
 class UserHandler {
   constructor(public service: UserService) {}
 
   registerUser = async (
-    req: Request<Record<string, unknown>, Record<string, unknown>, User>,
-    res: Response<ApiResponse<SuccessResponse, FailResponse>>,
+    req: Request<Record<string, unknown>, Record<string, unknown>, CreateUser>,
+    res: Response<ApiResponse<User>>,
   ) => {
     const result = await this.service.registerUser({
       fullname: req.body.fullname,
@@ -50,7 +47,7 @@ class UserHandler {
 
   getUserById = async (
     req: Request<{ id: string }>,
-    res: Response<ApiResponse<SuccessResponse, FailResponse>>,
+    res: Response<ApiResponse<User>>,
   ) => {
     const result = await this.service.getUserById(req.params.id)
     if (result.response.status === 'fail') {
@@ -63,8 +60,8 @@ class UserHandler {
   getCurrentUser = async (
     req: Request,
     res: Response<
-      ApiResponse<SuccessResponse, FailResponse>,
-      { user: { fullname: string; userId: number } }
+      ApiResponse<User>,
+      { user: { fullname: string; userId: number; email: string } }
     >,
   ) => {
     return res.status(200).json({
@@ -73,6 +70,7 @@ class UserHandler {
         user: {
           id: res.locals.user.userId,
           fullname: res.locals.user.fullname,
+          email: res.locals.user.email,
         },
       },
     })

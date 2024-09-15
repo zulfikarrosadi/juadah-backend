@@ -9,6 +9,8 @@ import connection from '../db/connection'
 import AuthHandler from './auth/handler'
 import AuthRepository from './auth/repository'
 import AuthService from './auth/service'
+import multer from './lib/upload'
+import formDataParse from './middlewares/formDataParser'
 import sanitizeInput from './middlewares/sanitizeInput'
 import ProductHandler from './product/handler'
 import ProductRepository from './product/repository'
@@ -48,6 +50,7 @@ export default function routes(app: Express) {
 
   app.post(
     '/api/products',
+    formDataParse(multer.array('images', 5)),
     validateInput(createProduct),
     productHandler.createProduct,
   )

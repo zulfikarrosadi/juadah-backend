@@ -1,14 +1,14 @@
 export type CurrentUser = { user: { userId: number; username: string } }
 
-export type SuccessResponse = Record<string, unknown>
+type ApiResponse<Data> =
+  | { status: 'success'; data: Record<string, Data> }
+  | {
+      status: 'fail'
+      errors: {
+        code: number
+        message: string
+        details?: Record<string, string>
+      }
+    }
 
-export type FailResponse = {
-  code: number
-  message: string
-  details?: Record<string, string>
-}
-
-type ApiResponse<Success, Fail> =
-  | { status: 'success'; data: Success }
-  | { status: 'fail'; errors: Fail }
 export default ApiResponse

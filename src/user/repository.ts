@@ -1,13 +1,13 @@
 import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { EmailAlreadyExistsError, ServerError } from '../lib/Error'
-import type { User } from './schema'
+import type { CreateUser } from './schema'
 
 class UserRepository {
   private USER_ALREADY_EXISTS = 1062
   private ER_BAD_DB_ERROR = 'ER_BAD_DB_ERROR'
   constructor(private db: Pool) {}
 
-  async createUser(data: User) {
+  async createUser(data: CreateUser) {
     try {
       const [rows] = await this.db.execute(
         'INSERT INTO users (fullname, email, password) VALUES (?,?,?)',

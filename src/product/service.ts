@@ -1,3 +1,4 @@
+import type ApiResponse from '../schema'
 import type { CreateProduct, Product } from './schema'
 
 interface ProductRepository {
@@ -6,17 +7,6 @@ interface ProductRepository {
   ): Promise<{ id: number; affectedRows: number }>
   getProductById(id: number): Promise<Product>
 }
-
-export type ApiResponse<Data> =
-  | { status: 'success'; data: Record<string, Data> }
-  | {
-      status: 'fail'
-      errors: {
-        code: number
-        message: string
-        details?: Record<string, string>
-      }
-    }
 
 class ProductService {
   constructor(public repo: ProductRepository) {}
@@ -36,7 +26,7 @@ class ProductService {
             name: result.name,
             description: result.description,
             price: result.price,
-            image: result.image,
+            images: result.images,
           },
         },
       }

@@ -17,7 +17,12 @@ export const createUserSchema = z
     path: ['password'],
   })
 
-export type User = Omit<
+export type CreateUser = Omit<
   z.TypeOf<typeof createUserSchema>,
   'passwordConfirmation'
 >
+
+export type User = Omit<
+  z.TypeOf<typeof createUserSchema>,
+  'passwordConfirmation' | 'password'
+> & { id: number }

@@ -1,10 +1,9 @@
 import { Auth } from '../lib/Auth'
 import { AuthCredentialError } from '../lib/Error'
 import type ApiResponse from '../schema'
-import type { FailResponse, SuccessResponse } from '../schema'
 import type { Login } from './schema'
 
-interface User {
+export interface User {
   id: number
   fullname: string
   email: string
@@ -26,7 +25,7 @@ class AuthService extends Auth {
   }
 
   async login(data: Login): Promise<{
-    response: ApiResponse<SuccessResponse, FailResponse>
+    response: ApiResponse<Omit<User, 'password'>>
     token?: { accessToken: string; refreshToken: string }
   }> {
     try {
@@ -90,7 +89,7 @@ class AuthService extends Auth {
   }
 
   async refreshToken(token: string): Promise<{
-    response: ApiResponse<SuccessResponse, FailResponse>
+    response: ApiResponse<Omit<User, 'password'>>
     token?: string
   }> {
     try {
