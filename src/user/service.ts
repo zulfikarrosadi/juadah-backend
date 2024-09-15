@@ -1,11 +1,10 @@
 import { Auth } from '../lib/Auth'
 import type ApiResponse from '../schema'
-import type { FailResponse, SuccessResponse } from '../schema'
-import type { User } from './schema'
+import type { CreateUser, User } from './schema'
 
 interface UserRepository {
-  createUser(data: User): Promise<{ userId: number }>
-  getUserById(id: number): Promise<Partial<User>>
+  createUser(data: CreateUser): Promise<{ userId: number }>
+  getUserById(id: number): Promise<Partial<CreateUser>>
   saveTokenToDb(
     refreshToken: string,
     userId: number,
@@ -18,9 +17,9 @@ class UserSerivce extends Auth {
   }
 
   public registerUser = async (
-    data: User,
+    data: CreateUser,
   ): Promise<{
-    response: ApiResponse<SuccessResponse, FailResponse>
+    response: ApiResponse<User>
     token?: { accessToken: string; refreshToken: string }
   }> => {
     try {
@@ -74,13 +73,16 @@ class UserSerivce extends Auth {
 
   public getUserById = async (
     idFromUrlPath: string,
-  ): Promise<{ response: ApiResponse<SuccessResponse, FailResponse> }> => {
+  ): Promise<{ response: ApiResponse<User> }> => {
     try {
       const id = Number.parseInt(idFromUrlPath, 10)
       if (Number.isNaN(id)) {
         throw new Error('user not found')
       }
       const user = await this.repo.getUserById(id)
+      if (!user.email || !user.fullname) {
+        throw new Error('create user is fail, please try again')
+      }
       return {
         response: {
           status: 'success',

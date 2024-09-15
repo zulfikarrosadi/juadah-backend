@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express'
+import type ApiResponse from '../schema'
 import type { CreateProduct, Product } from './schema'
-import type { ApiResponse } from './service'
 
 interface ProductService {
   createProduct(data: CreateProduct): Promise<ApiResponse<Product>>

@@ -1,16 +1,16 @@
 import type { Request, Response } from 'express'
 import { accessTokenMaxAge, refreshTokenMaxAge } from '../lib/token'
 import type ApiResponse from '../schema'
-import type { FailResponse, SuccessResponse } from '../schema'
 import type { Login } from './schema'
+import type { User } from './service'
 
 interface AuthService {
   login(data: Login): Promise<{
-    response: ApiResponse<SuccessResponse, FailResponse>
+    response: ApiResponse<Omit<User, 'password'>>
     token?: { accessToken: string; refreshToken: string }
   }>
   refreshToken(token: string): Promise<{
-    response: ApiResponse<SuccessResponse, FailResponse>
+    response: ApiResponse<Omit<User, 'password'>>
     token?: string
   }>
 }
@@ -50,7 +50,7 @@ class AuthHandler {
 
   refreshToken = async (
     req: Request,
-    res: Response<ApiResponse<SuccessResponse, FailResponse>>,
+    res: Response<ApiResponse<Omit<User, 'password'>>>,
   ) => {
     const refreshToken = req.cookies.refreshToken
 
