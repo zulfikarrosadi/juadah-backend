@@ -7,11 +7,14 @@ export const createProduct = z.object({
   description: z
     .string({ message: 'product description is required' })
     .min(1, 'product description is required'),
-  price: z
-    .number({ message: 'product price is required' })
-    .nonnegative('product price is invalid')
-    .gte(1000, 'product price should be minimum Rp. 1000'),
-  image: z.string().optional(),
+  price: z.string().transform((val) => {
+    const valInNumber = Number.parseFloat(val)
+    if (Number.isNaN(valInNumber)) {
+      throw new Error('product price is invalid')
+    }
+    return valInNumber
+  }),
+  images: z.string().array().optional(),
 })
 
 export type CreateProduct = z.TypeOf<typeof createProduct>

@@ -26,7 +26,7 @@ class ProductService {
             name: result.name,
             description: result.description,
             price: result.price,
-            image: result.image,
+            images: result.images,
           },
         },
       }
