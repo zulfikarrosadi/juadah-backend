@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
     let dir: string
     switch (file.fieldname) {
       case PRODUCT_PHOTO:
-        dir = path.join(__dirname, `../../public/img/${PRODUCT_PHOTO}`)
+        dir = path.join(__dirname, '../../public/img/product-photo')
         break
       default:
         dir = path.join(__dirname, '../../public/img')
