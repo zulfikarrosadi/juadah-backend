@@ -6,9 +6,11 @@ class ProductRepository {
   constructor(private db: Pool) {}
 
   async createProduct(data: CreateProduct) {
+    console.log('product repo create: ', data)
+
     const [rows] = await this.db.execute(
-      'INSERT INTO products (name, description, price, image) VALUES(?,?,?,?)',
-      [data.name, data.description, data.price, data.image || ''],
+      'INSERT INTO products (name, description, price, images) VALUES(?,?,?,?)',
+      [data.name, data.description, data.price, data.images || ['']],
     )
 
     const result = rows as ResultSetHeader
@@ -23,7 +25,7 @@ class ProductRepository {
 
   async getProductById(id: number) {
     const [rows] = await this.db.query<RowDataPacket[]>(
-      'SELECT id, name, description, price, image FROM products WHERE id = ?',
+      'SELECT id, name, description, price, images FROM products WHERE id = ?',
       [id],
     )
     if (!rows.length) {

@@ -17,7 +17,17 @@ class ProductHandler {
     >,
     res: Response<ApiResponse<Product>>,
   ) => {
-    const result = await this.service.createProduct(req.body)
+    let productPhotos: string[]
+    if (req.files?.length) {
+      productPhotos = req.files.map((file) => file.filename)
+    } else {
+      productPhotos = ['']
+    }
+
+    const result = await this.service.createProduct({
+      ...req.body,
+      images: productPhotos,
+    })
     if (result.status === 'fail') {
       return res.status(result.errors.code).json(result)
     }
