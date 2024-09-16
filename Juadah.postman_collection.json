@@ -120,18 +120,76 @@
             "method": "POST",
             "header": [],
             "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"{{$randomProductName}}\",\n    \"description\": \"{{$randomLoremParagraph}}\",\n    \"price\": 10000\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "{{$randomProductName}}",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "{{$randomLoremLines}}",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "10000",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [
+                    "postman-cloud:///1ef7334f-dd93-4960-a155-8de29fcef4ee",
+                    "postman-cloud:///1ef7334f-d60f-4c20-b99b-52e926854037"
+                  ]
                 }
-              }
+              ]
             },
             "url": {
               "raw": "{{base_url}}/products",
               "host": ["{{base_url}}"],
               "path": ["products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if(pm.response.code === 200) {",
+                  "    const res = pm.response.json()",
+                  "    pm.collectionVariables.set('last_id', res.data.meta.lastProductId)",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                {
+                  "key": "last_id",
+                  "value": "{{last_id}}",
+                  "disabled": true
+                }
+              ]
             }
           },
           "response": []
@@ -180,6 +238,11 @@
     },
     {
       "key": "fullname",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "last_id",
       "value": "",
       "type": "string"
     }
