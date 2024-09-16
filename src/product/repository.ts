@@ -35,6 +35,26 @@ class ProductRepository {
     }
     return rows[0] as unknown as Product
   }
+
+  async getProducts(lastProductId?: number) {
+    if (lastProductId) {
+      const [rows] = await this.db.query<RowDataPacket[]>(
+        'SELECT id, name, description, price, images FROM products WHERE id > ? ORDER BY id ASC LIMIT 30',
+        [lastProductId],
+      )
+      if (!rows.length) {
+        throw new NotFoundError('no products found')
+      }
+      return rows as unknown as Product[]
+    }
+    const [rows] = await this.db.query<RowDataPacket[]>(
+      'SELECT id, name, description, price, images FROM products ORDER BY id ASC LIMIT 30',
+    )
+    if (!rows.length) {
+      throw new NotFoundError('no products found')
+    }
+    return rows as unknown as Product[]
+  }
 }
 
 export default ProductRepository

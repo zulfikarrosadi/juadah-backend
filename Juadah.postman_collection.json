@@ -154,6 +154,45 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if(pm.response.code === 200) {",
+                  "    const res = pm.response.json()",
+                  "    pm.collectionVariables.set('last_id', res.data.meta.lastProductId)",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"],
+              "query": [
+                {
+                  "key": "last_id",
+                  "value": "{{last_id}}",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }
@@ -199,6 +238,11 @@
     },
     {
       "key": "fullname",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "last_id",
       "value": "",
       "type": "string"
     }

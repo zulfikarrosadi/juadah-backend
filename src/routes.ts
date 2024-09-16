@@ -54,4 +54,5 @@ export default function routes(app: Express) {
     validateInput(createProduct),
     productHandler.createProduct,
   )
+  app.get('/api/products', productHandler.getProducts)
 }

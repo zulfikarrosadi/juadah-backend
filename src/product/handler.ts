@@ -4,6 +4,9 @@ import type { CreateProduct, Product } from './schema'
 
 interface ProductService {
   createProduct(data: CreateProduct): Promise<ApiResponse<Product>>
+  getProducts(
+    lastProductId?: string,
+  ): Promise<ApiResponse<Record<string, unknown>>>
 }
 
 class ProductHandler {
@@ -32,6 +35,22 @@ class ProductHandler {
       return res.status(result.errors.code).json(result)
     }
     return res.status(201).json(result)
+  }
+
+  getProducts = async (
+    req: Request<
+      Record<string, unknown>,
+      Record<string, unknown>,
+      Record<string, unknown>,
+      { last_id?: string }
+    >,
+    res: Response,
+  ) => {
+    const result = await this.service.getProducts(req.query.last_id)
+    if (result.status === 'fail') {
+      return res.status(result.errors.code).json(result)
+    }
+    return res.status(200).json(result)
   }
 }
 
