@@ -1,6 +1,6 @@
 import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
 import { NotFoundError, ServerError } from '../lib/Error'
-import type { CreateProduct, Product } from './schema'
+import type { CreateProduct, FlattenUpdateProduct, Product } from './schema'
 
 class ProductRepository {
   constructor(private db: Pool) {}
@@ -68,6 +68,21 @@ class ProductRepository {
     }
 
     return { affectedRows: result.affectedRows }
+  }
+
+  async updateProductById(id: number, data: FlattenUpdateProduct) {
+    const [rows] = await this.db.execute(
+      'UPDATE products SET name = ?, description = ?, price = ?, images = ? WHERE id = ?',
+      [data.name, data.description, data.price, data.images, id],
+    )
+    const result = rows as ResultSetHeader
+    if (!result.affectedRows) {
+      throw new Error(
+        'failed to update product, enter the correct information and try again',
+      )
+    }
+
+    return { affectedRows: result.affectedRows, id }
   }
 }
 
