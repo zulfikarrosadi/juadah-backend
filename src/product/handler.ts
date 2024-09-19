@@ -1,12 +1,21 @@
 import type { Request, Response } from 'express'
 import type ApiResponse from '../schema'
-import type { CreateProduct, Product } from './schema'
+import type {
+  CreateProduct,
+  Product,
+  UpdateProduct,
+  UpdateProductDataService,
+} from './schema'
 
 interface ProductService {
   createProduct(data: CreateProduct): Promise<ApiResponse<Product>>
   getProducts(
     lastProductId?: string,
   ): Promise<ApiResponse<Record<string, unknown>>>
+  updateProductById(
+    id: string,
+    data: UpdateProductDataService,
+  ): Promise<ApiResponse<Product>>
 }
 
 class ProductHandler {
@@ -47,6 +56,30 @@ class ProductHandler {
     res: Response,
   ) => {
     const result = await this.service.getProducts(req.query.last_id)
+    if (result.status === 'fail') {
+      return res.status(result.errors.code).json(result)
+    }
+    return res.status(200).json(result)
+  }
+
+  updateProductById = async (
+    req: Request<{ id: string }, Record<string, unknown>, UpdateProduct>,
+    res: Response,
+  ) => {
+    console.log('req body: ', req.body)
+    console.log('req file', req.files)
+    let newProductPhotos: string[]
+    if (req.files?.length) {
+      newProductPhotos = req.files.map((file) => file.filename)
+    } else {
+      newProductPhotos = ['']
+    }
+    console.log(newProductPhotos)
+
+    const result = await this.service.updateProductById(req.params.id, {
+      ...req.body,
+      images: { removed: req.body.images.removed, new: newProductPhotos },
+    })
     if (result.status === 'fail') {
       return res.status(result.errors.code).json(result)
     }
