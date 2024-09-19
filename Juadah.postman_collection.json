@@ -159,6 +159,14 @@
           "name": "Products",
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "exec": [""],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "exec": [
@@ -168,7 +176,9 @@
                   "",
                   "if(pm.response.code === 200) {",
                   "    const res = pm.response.json()",
-                  "    pm.collectionVariables.set('last_id', res.data.meta.lastProductId)",
+                  "    const products = res.data.products",
+                  "    pm.collectionVariables.set('last_product_id', res.data.meta.lastProductId)",
+                  "    pm.collectionVariables.set('last_product_images', products[products.length - 1].images)",
                   "}"
                 ],
                 "type": "text/javascript",
@@ -186,8 +196,101 @@
               "query": [
                 {
                   "key": "last_id",
-                  "value": "{{last_id}}",
+                  "value": "{{last_product_id}}",
                   "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const images = pm.collectionVariables.get('last_product_images')",
+                  "pm.collectionVariables.set('product_image_to_remove', images[images.length - 1])",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if(pm.response.code === 200) {",
+                  "    const { data } = pm.response.json()    ",
+                  "    pm.collectionVariables.set('last_product_images', data.products.images)",
+                  "}",
+                  "",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "{{$randomProductName}}",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "{{$randomLoremSentences}}",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "15000",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "postman-cloud:///1ef7334f-dd93-4960-a155-8de29fcef4ee"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": [],
+                  "disabled": true
+                },
+                {
+                  "key": "images[removed][0]",
+                  "value": "{{product_image_to_remove}}",
+                  "type": "text"
+                },
+                {
+                  "key": "images[removed][0]",
+                  "value": "",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/products/:id",
+              "host": ["{{base_url}}"],
+              "path": ["products", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{last_product_id}}"
                 }
               ]
             }
@@ -242,7 +345,17 @@
       "type": "string"
     },
     {
-      "key": "last_id",
+      "key": "last_product_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "last_product_images",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_image_to_remove",
       "value": "",
       "type": "string"
     }
