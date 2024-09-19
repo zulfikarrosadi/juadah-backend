@@ -1,5 +1,11 @@
+import { NotFoundError } from '../lib/Error'
 import type ApiResponse from '../schema'
-import type { CreateProduct, Product } from './schema'
+import type {
+  CreateProduct,
+  FlattenUpdateProduct,
+  Product,
+  UpdateProductDataService,
+} from './schema'
 
 interface ProductRepository {
   createProduct(
@@ -8,6 +14,10 @@ interface ProductRepository {
   getProductById(id: number): Promise<Product>
   getProducts(lastProductId?: number): Promise<Product[]>
   deleteProductById(id: number): Promise<{ affectedRows: number }>
+  updateProductById(
+    id: number,
+    data: FlattenUpdateProduct,
+  ): Promise<{ affectedRows: number; id: number }>
 }
 
 class ProductService {
@@ -91,6 +101,59 @@ class ProductService {
         status: 'fail',
         errors: {
           code: 404,
+          message: error.message || error,
+        },
+      }
+    }
+  }
+
+  updateProductById = async (
+    id: string,
+    data: UpdateProductDataService,
+  ): Promise<ApiResponse<Product>> => {
+    const parsedId = Number.parseInt(id, 10)
+    try {
+      if (Number.isNaN(parsedId)) {
+        throw new NotFoundError(
+          "you are trying to update the product that doesn't exists",
+        )
+      }
+
+      const oldProduct = await this.repo.getProductById(parsedId)
+      const allImages = [
+        ...new Set([...data.images.new, ...(oldProduct.images || '')]),
+      ]
+      const finalImages = allImages
+        .filter((image) => !data.images.removed.includes(image))
+        .filter(Boolean)
+      if (finalImages.length > 5) {
+        console.log(finalImages)
+        throw new Error('each product can only have 5 images at max')
+      }
+      const updatedProduct = await this.repo.updateProductById(parsedId, {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        images: finalImages,
+      })
+
+      return {
+        status: 'success',
+        data: {
+          products: {
+            id: updatedProduct.id,
+            name: data.name,
+            description: data.description,
+            price: data.price,
+            images: finalImages,
+          },
+        },
+      }
+    } catch (error) {
+      return {
+        status: 'fail',
+        errors: {
+          code: error.code || 400,
           message: error.message || error,
         },
       }
