@@ -14,7 +14,7 @@ import formDataParse from './middlewares/formDataParser'
 import sanitizeInput from './middlewares/sanitizeInput'
 import ProductHandler from './product/handler'
 import ProductRepository from './product/repository'
-import { createProduct } from './product/schema'
+import { createProduct, updateProduct } from './product/schema'
 import ProductService from './product/service'
 import UserHandler from './user/handler'
 import UserRepository from './user/repository'
@@ -55,4 +55,10 @@ export default function routes(app: Express) {
     productHandler.createProduct,
   )
   app.get('/api/products', productHandler.getProducts)
+  app.put(
+    '/api/products/:id',
+    formDataParse(multer.array('images', 5)),
+    validateInput(updateProduct),
+    productHandler.updateProductById,
+  )
 }
