@@ -66,8 +66,6 @@ class ProductHandler {
     req: Request<{ id: string }, Record<string, unknown>, UpdateProduct>,
     res: Response,
   ) => {
-    console.log('req body: ', req.body)
-    console.log('req file', req.files)
     let newProductPhotos: string[]
     if (req.files?.length) {
       newProductPhotos = req.files.map((file) => file.filename)
