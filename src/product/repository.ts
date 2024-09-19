@@ -55,6 +55,20 @@ class ProductRepository {
     }
     return rows as unknown as Product[]
   }
+
+  async deleteProductById(id: number) {
+    const [rows] = await this.db.execute('DELETE FROM products WHERE id = ?', [
+      id,
+    ])
+    const result = rows as ResultSetHeader
+    if (!result.affectedRows) {
+      throw new NotFoundError(
+        "you are trying to delete the product that does'nt exists",
+      )
+    }
+
+    return { affectedRows: result.affectedRows }
+  }
 }
 
 export default ProductRepository
