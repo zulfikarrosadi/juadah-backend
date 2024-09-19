@@ -72,7 +72,6 @@ class ProductHandler {
     } else {
       newProductPhotos = ['']
     }
-    console.log(newProductPhotos)
 
     const result = await this.service.updateProductById(req.params.id, {
       ...req.body,
