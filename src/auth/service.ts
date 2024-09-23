@@ -1,7 +1,7 @@
 import { Auth } from '../lib/Auth'
 import { AuthCredentialError } from '../lib/Error'
 import type ApiResponse from '../schema'
-import type { Login } from './schema'
+import type { Login, RegisterUser } from './schema'
 
 export interface User {
   id: number
@@ -11,7 +11,9 @@ export interface User {
 }
 
 interface AuthRepository {
+  createUser(data: RegisterUser): Promise<{ userId: number }>
   getUserByEmail(email: string): Promise<Partial<User>>
+  getUserById(id: number): Promise<Omit<User, 'password'>>
   saveTokenToDb(
     token: string,
     userId: number,
@@ -22,6 +24,59 @@ interface AuthRepository {
 class AuthService extends Auth {
   constructor(public repository: AuthRepository) {
     super()
+  }
+
+  async registerUser(data: RegisterUser): Promise<{
+    response: ApiResponse<Omit<User, 'password'>>
+    token?: { accessToken: string; refreshToken: string }
+  }> {
+    try {
+      const newUser = await this.repository.createUser({
+        fullname: data.fullname,
+        email: data.email,
+        password: await this.hashPassword(data.password),
+      })
+
+      const user = await this.repository.getUserById(newUser.userId)
+      if (!user.email || !user.fullname) {
+        throw new Error('create user is fail, please try again')
+      }
+
+      const accessToken = this.createAccessToken({
+        fullname: user.fullname,
+        email: user.email,
+        userId: newUser.userId,
+      })
+      const refreshToken = this.createRefreshToken({
+        fullname: user.fullname,
+        email: user.email,
+        userId: newUser.userId,
+      })
+      await this.repository.saveTokenToDb(refreshToken, newUser.userId)
+      return {
+        response: {
+          status: 'success',
+          data: {
+            user: {
+              id: newUser.userId,
+              fullname: user.fullname,
+              email: user.email,
+            },
+          },
+        },
+        token: { accessToken, refreshToken },
+      }
+    } catch (error: any) {
+      return {
+        response: {
+          status: 'fail',
+          errors: {
+            code: typeof error.code === 'number' ? error.code : 400,
+            message: error.message || error,
+          },
+        },
+      }
+    }
   }
 
   async login(data: Login): Promise<{
