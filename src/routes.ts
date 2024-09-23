@@ -17,7 +17,6 @@ import ProductRepository from './product/repository'
 import { createProduct, updateProduct } from './product/schema'
 import ProductService from './product/service'
 import UserHandler from './user/handler'
-import UserRepository from './user/repository'
 import UserSerivce from './user/service'
 
 export default function routes(app: Express) {
@@ -25,8 +24,7 @@ export default function routes(app: Express) {
   const authService = new AuthService(authRepo)
   const authHandler = new AuthHandler(authService)
 
-  const userRepo = new UserRepository(connection)
-  const userService = new UserSerivce(userRepo)
+  const userService = new UserSerivce(authRepo)
   const userHandler = new UserHandler(userService)
 
   const productRepo = new ProductRepository(connection)
@@ -38,7 +36,7 @@ export default function routes(app: Express) {
     '/api/register',
     //@ts-ignore
     validateInput(createUserSchema),
-    userHandler.registerUser,
+    authHandler.registerUser,
   )
   app.post('/api/login', validateInput(loginSchema), authHandler.login)
   app.get('/api/refresh', authHandler.refreshToken)
