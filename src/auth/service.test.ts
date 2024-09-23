@@ -1,5 +1,5 @@
 import { hashSync } from 'bcrypt'
-import { AuthCredentialError } from '../lib/Error'
+import { AuthCredentialError, EmailAlreadyExistsError } from '../lib/Error'
 import { createNewToken, refreshTokenMaxAge, verifyToken } from '../lib/token'
 import type AuthRepository from './repository'
 import AuthService from './service'
@@ -15,12 +15,60 @@ describe('auth service', () => {
 
   beforeEach(() => {
     authRepo = {
+      createUser: jest.fn(),
+      getUserById: jest.fn(),
       getUserByEmail: jest.fn(),
       saveTokenToDb: jest.fn(),
       getTokenByUserId: jest.fn(),
     } as unknown as jest.Mocked<AuthRepository>
 
     authService = new AuthService(authRepo)
+  })
+
+  describe('register user', () => {
+    it('should register new user', async () => {
+      authRepo.createUser.mockResolvedValue({ userId: 1 })
+      authRepo.saveTokenToDb.mockResolvedValue({ affectedRows: 1 })
+      authRepo.getUserById.mockResolvedValue({
+        id: 1,
+        fullname: FULLNAME,
+        email: VALID_EMAIL,
+      })
+      const newUser = await authService.registerUser({
+        fullname: FULLNAME,
+        email: VALID_EMAIL,
+        password: 'password',
+      })
+
+      expect(authRepo.createUser).toHaveBeenCalled()
+      expect(newUser.response.status).toBe('success')
+      expect(newUser).toHaveProperty('token')
+      expect(newUser.response).toEqual({
+        status: 'success',
+        data: {
+          user: { id: 1, email: VALID_EMAIL, fullname: FULLNAME },
+        },
+      })
+      expect(newUser.token?.accessToken).not.toBeNull()
+      expect(newUser.token?.refreshToken).not.toBeNull()
+    })
+
+    it('should fail: email already exists', async () => {
+      authRepo.createUser.mockRejectedValue(new EmailAlreadyExistsError())
+      const newUser = await authService.registerUser({
+        email: 'already_exist_email',
+        password: VALID_PASSWORD,
+        fullname: FULLNAME,
+      })
+
+      expect(authRepo.createUser).toHaveBeenCalled()
+      expect(newUser.response.status).toBe('fail')
+      if (newUser.response.status === 'fail') {
+        expect(newUser.response.errors.message).toBe(
+          'this email already exists',
+        )
+      }
+    })
   })
 
   describe('login', () => {

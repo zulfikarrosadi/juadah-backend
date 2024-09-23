@@ -1,10 +1,14 @@
 import type { Request, Response } from 'express'
 import { accessTokenMaxAge, refreshTokenMaxAge } from '../lib/token'
 import type ApiResponse from '../schema'
-import type { Login } from './schema'
+import type { Login, RegisterUser } from './schema'
 import type { User } from './service'
 
 interface AuthService {
+  registerUser(data: RegisterUser): Promise<{
+    response: ApiResponse<Omit<User, 'password'>>
+    token?: { accessToken: string; refreshToken: string }
+  }>
   login(data: Login): Promise<{
     response: ApiResponse<Omit<User, 'password'>>
     token?: { accessToken: string; refreshToken: string }
@@ -17,6 +21,41 @@ interface AuthService {
 
 class AuthHandler {
   constructor(private service: AuthService) {}
+
+  registerUser = async (
+    req: Request<
+      Record<string, unknown>,
+      Record<string, unknown>,
+      RegisterUser
+    >,
+    res: Response<ApiResponse<Omit<User, 'password'>>>,
+  ) => {
+    const result = await this.service.registerUser({
+      fullname: req.body.fullname,
+      password: req.body.password,
+      email: req.body.email,
+    })
+    if (result.response.status === 'fail') {
+      return res.status(result.response.errors.code).json(result.response)
+    }
+
+    return res
+      .status(201)
+      .cookie('accessToken', result.token?.accessToken, {
+        secure: true,
+        sameSite: 'none',
+        httpOnly: true,
+        maxAge: accessTokenMaxAge,
+      })
+      .cookie('refreshToken', result.token?.refreshToken, {
+        secure: true,
+        sameSite: 'none',
+        httpOnly: true,
+        path: '/api/refresh',
+        maxAge: refreshTokenMaxAge,
+      })
+      .json(result.response)
+  }
 
   login = async (
     req: Request<Record<string, unknown>, Record<string, unknown>, Login>,
