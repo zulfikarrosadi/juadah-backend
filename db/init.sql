@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
   refresh_token VARCHAR(1000),
+  email_verified BOOLEAN DEFAULT FALSE,
+  verification_token CHAR(6),
 
   UNIQUE(email)
 );
