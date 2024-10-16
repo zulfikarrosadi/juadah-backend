@@ -11,7 +11,7 @@ export const accessTokenMaxAge = 600000
 export const refreshTokenMaxAge = 864000000
 const tokenSecret = process.env.TOKEN_SECRET as string
 type decodedType = JwtPayload & {
-  userId: number
+  userId: bigint
   fullname: string
   email: string
 }
@@ -33,7 +33,6 @@ export function verifyToken(token: string): {
 export function createNewToken(data: {
   fullname: string
   email: string
-  userId: number
   expiration: number
 }) {
   const token = sign(
@@ -41,7 +40,6 @@ export function createNewToken(data: {
       tokenId: Math.random(),
       fullname: data.fullname,
       email: data.email,
-      userId: data.userId,
     },
     tokenSecret,
     {
