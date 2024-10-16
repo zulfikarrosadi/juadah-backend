@@ -99,12 +99,10 @@ class AuthService extends Auth {
       const accessToken = this.createAccessToken({
         fullname: user.fullname,
         email: user.email,
-        userId: user.id,
       })
       const refreshToken = this.createRefreshToken({
         fullname: user.fullname,
         email: user.email,
-        userId: user.id,
       })
       this.repository.saveTokenToDb(refreshToken, user.id)
 
@@ -162,7 +160,6 @@ class AuthService extends Auth {
       const newAccessToken = this.createAccessToken({
         fullname: decodedData.fullname,
         email: decodedData.email,
-        userId: decodedData.userId,
       })
       return {
         response: {
