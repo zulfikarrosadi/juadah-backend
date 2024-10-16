@@ -5,6 +5,7 @@ import requiredLogin from './middlewares/requiredLogin'
 import { validateInput } from './middlewares/validateInput'
 import { createUserSchema } from './user/schema'
 
+import { PrismaClient } from '@prisma/client'
 import connection from '../db/connection'
 import AuthHandler from './auth/handler'
 import AuthRepository from './auth/repository'
@@ -17,15 +18,15 @@ import ProductRepository from './product/repository'
 import { createProduct, updateProduct } from './product/schema'
 import ProductService from './product/service'
 import UserHandler from './user/handler'
-import UserSerivce from './user/service'
+
+const prisma = new PrismaClient()
 
 export default function routes(app: Express) {
-  const authRepo = new AuthRepository(connection)
+  const authRepo = new AuthRepository(prisma)
   const authService = new AuthService(authRepo)
   const authHandler = new AuthHandler(authService)
 
-  const userService = new UserSerivce(authRepo)
-  const userHandler = new UserHandler(userService)
+  const userHandler = new UserHandler()
 
   const productRepo = new ProductRepository(connection)
   const productService = new ProductService(productRepo)
@@ -44,7 +45,6 @@ export default function routes(app: Express) {
   app.use(deserializeToken)
   app.use(requiredLogin)
   app.get('/api/users', userHandler.getCurrentUser)
-  app.get('/api/users/:id', userHandler.getUserById)
 
   app.post(
     '/api/products',
