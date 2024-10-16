@@ -34,36 +34,33 @@ class AuthService extends Auth {
     token?: { accessToken: string; refreshToken: string }
   }> {
     try {
-      const newUser = await this.repository.createUser({
+      const accessToken = this.createAccessToken({
         fullname: data.fullname,
         email: data.email,
-        password: await this.hashPassword(data.password),
-      })
-
-      const user = await this.repository.getUserById(newUser.userId)
-      if (!user.email || !user.fullname) {
-        throw new Error('create user is fail, please try again')
-      }
-
-      const accessToken = this.createAccessToken({
-        fullname: user.fullname,
-        email: user.email,
-        userId: newUser.userId,
       })
       const refreshToken = this.createRefreshToken({
-        fullname: user.fullname,
-        email: user.email,
-        userId: newUser.userId,
+        fullname: data.fullname,
+        email: data.email,
       })
-      await this.repository.saveTokenToDb(refreshToken, newUser.userId)
+      const otp = this.generateOTP()
+      const newUser = await this.repository.createUser(
+        {
+          email: data.email,
+          fullname: data.fullname,
+          password: await this.hashPassword(data.password),
+        },
+        refreshToken,
+        otp,
+      )
+
       return {
         response: {
           status: 'success',
           data: {
             user: {
-              id: newUser.userId,
-              fullname: user.fullname,
-              email: user.email,
+              id: newUser.id,
+              fullname: newUser.fullname,
+              email: newUser.email,
             },
           },
         },
