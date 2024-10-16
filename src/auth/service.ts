@@ -4,21 +4,24 @@ import type ApiResponse from '../schema'
 import type { Login, RegisterUser } from './schema'
 
 export interface User {
-  id: number
+  id: bigint
   fullname: string
   email: string
   password: string
 }
 
 interface AuthRepository {
-  createUser(data: RegisterUser): Promise<{ userId: number }>
+  createUser(
+    data: RegisterUser,
+    refreshToken: string,
+    otp: string,
+  ): Promise<{ id: bigint; fullname: string; email: string }>
   getUserByEmail(email: string): Promise<Partial<User>>
-  getUserById(id: number): Promise<Omit<User, 'password'>>
   saveTokenToDb(
     token: string,
-    userId: number,
+    userId: bigint,
   ): Promise<{ affectedRows: number }>
-  getTokenByUserId(userId: number): Promise<string>
+  getTokenByUserId(userId: bigint): Promise<string | null>
 }
 
 class AuthService extends Auth {
