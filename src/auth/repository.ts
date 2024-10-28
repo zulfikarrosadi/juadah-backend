@@ -74,10 +74,10 @@ class AuthRepository {
     return { affectedRows: 1 }
   }
 
-  async getTokenByUserId(userId: bigint) {
+  async getTokenByEmail(email: string) {
     const refreshToken = await this.prisma.users.findUnique({
       where: {
-        id: userId,
+        email: email,
       },
       select: {
         refresh_token: true,
