@@ -11,7 +11,6 @@ export const accessTokenMaxAge = 600000
 export const refreshTokenMaxAge = 864000000
 const tokenSecret = process.env.TOKEN_SECRET as string
 type decodedType = JwtPayload & {
-  userId: bigint
   fullname: string
   email: string
 }
