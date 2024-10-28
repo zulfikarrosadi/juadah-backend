@@ -21,7 +21,7 @@ interface AuthRepository {
     token: string,
     userId: bigint,
   ): Promise<{ affectedRows: number }>
-  getTokenByUserId(userId: bigint): Promise<string | null>
+  getTokenByEmail(email: string): Promise<string | null>
 }
 
 class AuthService extends Auth {
@@ -151,8 +151,8 @@ class AuthService extends Auth {
       if (!decodedData) {
         throw new Error('invalid refresh token')
       }
-      const tokenFromDb = await this.repository.getTokenByUserId(
-        decodedData.userId,
+      const tokenFromDb = await this.repository.getTokenByEmail(
+        decodedData.email,
       )
       if (token !== tokenFromDb) {
         throw new Error('invalid refresh token')
