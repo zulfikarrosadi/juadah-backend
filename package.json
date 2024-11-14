@@ -1,7 +1,7 @@
 {
   "name": "juadah-backend",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "test": "npx jest",
     "postinstall": "prisma generate",
@@ -11,7 +11,7 @@
     "fix-lint": "npx biome lint --write --unsafe ./src",
     "format": "npx biome format --write ./src",
     "prepare": "husky",
-    "start": "node dist/index.js"
+    "start": "node dist/src/index.js"
   },
   "lint-staged": {
     "*": [
