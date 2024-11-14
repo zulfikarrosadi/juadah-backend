@@ -18,44 +18,4 @@ import { createProduct, updateProduct } from './product/schema'
 import ProductService from './product/service'
 import UserHandler from './user/handler'
 
-const prisma = new PrismaClient()
-
-export default function routes(app: Express) {
-  const authRepo = new AuthRepository(prisma)
-  const authService = new AuthService(authRepo)
-  const authHandler = new AuthHandler(authService)
-
-  const userHandler = new UserHandler()
-
-  const productRepo = new ProductRepository(prisma)
-  const productService = new ProductService(productRepo)
-  const productHandler = new ProductHandler(productService)
-
-  app.use(sanitizeInput)
-  app.post(
-    '/api/register',
-    //@ts-ignore
-    validateInput(createUserSchema),
-    authHandler.registerUser,
-  )
-  app.post('/api/login', validateInput(loginSchema), authHandler.login)
-  app.get('/api/refresh', authHandler.refreshToken)
-
-  app.use(deserializeToken)
-  app.use(requiredLogin)
-  app.get('/api/users', userHandler.getCurrentUser)
-
-  app.post(
-    '/api/products',
-    formDataParse(multer.array('images', 5)),
-    validateInput(createProduct),
-    productHandler.createProduct,
-  )
-  app.get('/api/products', productHandler.getProducts)
-  app.put(
-    '/api/products/:id',
-    formDataParse(multer.array('images', 5)),
-    validateInput(updateProduct),
-    productHandler.updateProductById,
-  )
-}
+export default function routes(app: Express) {}

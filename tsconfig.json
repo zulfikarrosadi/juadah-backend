@@ -12,7 +12,6 @@
     "noImplicitOverride": true,
     "module": "NodeNext",
     "outDir": "dist",
-    "rootDir": "src",
     "sourceMap": true
   }
 }

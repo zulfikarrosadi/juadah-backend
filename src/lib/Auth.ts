@@ -37,6 +37,15 @@ export class Auth {
     })
   }
 
+  public generateOTP() {
+    const otp = []
+    for (let i = 0; i < 6; i++) {
+      const randomNumber = Math.round(Math.random() * 9)
+      otp.push(randomNumber)
+    }
+    return otp.join('')
+  }
+
   protected verifyToken(token: string) {
     return verifyToken(token)
   }

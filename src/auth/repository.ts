@@ -37,6 +37,8 @@ class AuthRepository {
       ) {
         throw new EmailAlreadyExistsError()
       }
+      console.log(error)
+
       throw new ServerError(
         "error while creating the account, this is not your fault, we're working on it. please try again later",
       )
