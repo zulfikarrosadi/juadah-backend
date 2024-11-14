@@ -14,7 +14,7 @@ BigInt.prototype.toJSON = function () {
 app.use(
   cors({
     credentials: true,
-    origin: ['http://localhost:5173'],
+    origin: ['*'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 )
