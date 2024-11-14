@@ -1,3 +1,4 @@
+import type { JsonValue } from '@prisma/client/runtime/library'
 import { NotFoundError } from '../lib/Error'
 import type ApiResponse from '../schema'
 import type {
@@ -10,14 +11,27 @@ import type {
 interface ProductRepository {
   createProduct(
     data: CreateProduct,
-  ): Promise<{ id: number; affectedRows: number }>
-  getProductById(id: number): Promise<Product>
-  getProducts(lastProductId?: number): Promise<Product[]>
+  ): Promise<{ id: bigint; affectedRows: number }>
+  getProductById(id: bigint): Promise<{
+    name: string
+    description: string
+    images: string[]
+    id: bigint
+    price: number
+  }>
+  getProducts(lastProductId?: number): Promise<
+    {
+      name: string
+      description: string
+      images: JsonValue
+      id: bigint
+    }[]
+  >
   deleteProductById(id: number): Promise<{ affectedRows: number }>
   updateProductById(
-    id: number,
+    id: bigint,
     data: FlattenUpdateProduct,
-  ): Promise<{ affectedRows: number; id: number }>
+  ): Promise<{ affectedRows: number; id: bigint }>
 }
 
 class ProductService {
@@ -27,7 +41,11 @@ class ProductService {
     data: CreateProduct,
   ): Promise<ApiResponse<Product>> => {
     try {
-      const newProduct = await this.repo.createProduct(data)
+      const priceInNumber = Number.parseInt(data.price, 10)
+      const newProduct = await this.repo.createProduct({
+        ...data,
+        price: priceInNumber,
+      })
       const result = await this.repo.getProductById(newProduct.id)
 
       return {
@@ -111,7 +129,8 @@ class ProductService {
     id: string,
     data: UpdateProductDataService,
   ): Promise<ApiResponse<Product>> => {
-    const parsedId = Number.parseInt(id, 10)
+    const parsedId = BigInt(id)
+    const priceInNumber = Number.parseInt(data.price, 10)
     try {
       if (Number.isNaN(parsedId)) {
         throw new NotFoundError(
@@ -133,7 +152,7 @@ class ProductService {
       const updatedProduct = await this.repo.updateProductById(parsedId, {
         name: data.name,
         description: data.description,
-        price: data.price,
+        price: priceInNumber,
         images: finalImages,
       })
 
@@ -150,6 +169,8 @@ class ProductService {
         },
       }
     } catch (error) {
+      console.log(error)
+
       return {
         status: 'fail',
         errors: {

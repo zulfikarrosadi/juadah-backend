@@ -1,88 +1,128 @@
-import type { Pool, ResultSetHeader, RowDataPacket } from 'mysql2/promise'
-import { NotFoundError, ServerError } from '../lib/Error'
-import type { CreateProduct, FlattenUpdateProduct, Product } from './schema'
+import type { PrismaClient } from '@prisma/client'
+import { NotFoundError } from '../lib/Error'
+import type { CreateProduct, FlattenUpdateProduct } from './schema'
 
 class ProductRepository {
-  constructor(private db: Pool) {}
+  constructor(private prisma: PrismaClient) {}
 
   async createProduct(data: CreateProduct) {
-    console.log('product repo create: ', data)
+    const newProduct = await this.prisma.products.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        images: data.images || [''],
+      },
+    })
 
-    const [rows] = await this.db.execute(
-      'INSERT INTO products (name, description, price, images) VALUES(?,?,?,?)',
-      [data.name, data.description, data.price, data.images || ['']],
-    )
-
-    const result = rows as ResultSetHeader
-    if (!result.affectedRows) {
-      throw new ServerError(
-        "fail to create product, this is not your fault and we're working on this. please try again later",
-      )
-    }
-
-    return { affectedRows: result.affectedRows, id: result.insertId }
+    return { affectedRows: 1, id: newProduct.id }
   }
 
-  async getProductById(id: number) {
-    const [rows] = await this.db.query<RowDataPacket[]>(
-      'SELECT id, name, description, price, images FROM products WHERE id = ?',
-      [id],
-    )
-    if (!rows.length) {
+  async getProductById(id: bigint) {
+    const product = await this.prisma.products.findUnique({
+      where: {
+        id: id,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        images: true,
+        price: true,
+      },
+    })
+    if (!product) {
+      console.log('error repo', product)
+
       throw new NotFoundError(
         'product not found, enter the correct information and try again',
       )
     }
-    return rows[0] as unknown as Product
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      images: product.images as string[],
+    }
   }
 
   async getProducts(lastProductId?: number) {
     if (lastProductId) {
-      const [rows] = await this.db.query<RowDataPacket[]>(
-        'SELECT id, name, description, price, images FROM products WHERE id > ? ORDER BY id ASC LIMIT 30',
-        [lastProductId],
-      )
-      if (!rows.length) {
+      const products = await this.prisma.products.findMany({
+        take: 30,
+        skip: 1,
+        orderBy: {
+          id: 'asc',
+        },
+        cursor: {
+          id: lastProductId,
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          images: true,
+        },
+      })
+      if (!products.length) {
         throw new NotFoundError('no products found')
       }
-      return rows as unknown as Product[]
+      return products
     }
-    const [rows] = await this.db.query<RowDataPacket[]>(
-      'SELECT id, name, description, price, images FROM products ORDER BY id ASC LIMIT 30',
-    )
-    if (!rows.length) {
+    const products = await this.prisma.products.findMany({
+      take: 30,
+      orderBy: {
+        id: 'asc',
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        images: true,
+      },
+    })
+
+    if (!products.length) {
       throw new NotFoundError('no products found')
     }
-    return rows as unknown as Product[]
+    return products
   }
 
   async deleteProductById(id: number) {
-    const [rows] = await this.db.execute('DELETE FROM products WHERE id = ?', [
-      id,
-    ])
-    const result = rows as ResultSetHeader
-    if (!result.affectedRows) {
+    const deletedProduct = await this.prisma.products.delete({
+      where: {
+        id: id,
+      },
+    })
+    if (!deletedProduct) {
       throw new NotFoundError(
         "you are trying to delete the product that does'nt exists",
       )
     }
 
-    return { affectedRows: result.affectedRows }
+    return { affectedRows: 1 }
   }
 
-  async updateProductById(id: number, data: FlattenUpdateProduct) {
-    const [rows] = await this.db.execute(
-      'UPDATE products SET name = ?, description = ?, price = ?, images = ? WHERE id = ?',
-      [data.name, data.description, data.price, data.images, id],
-    )
-    const result = rows as ResultSetHeader
-    if (!result.affectedRows) {
+  async updateProductById(id: bigint, data: FlattenUpdateProduct) {
+    const updatedProduct = await this.prisma.products.update({
+      where: {
+        id: id,
+      },
+      data: {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        images: data.images,
+      },
+    })
+    if (!updatedProduct) {
       throw new Error(
         'failed to update product, enter the correct information and try again',
       )
     }
 
-    return { affectedRows: result.affectedRows, id }
+    return { affectedRows: 1, id: updatedProduct.id }
   }
 }
 
