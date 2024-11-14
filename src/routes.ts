@@ -6,7 +6,6 @@ import { validateInput } from './middlewares/validateInput'
 import { createUserSchema } from './user/schema'
 
 import { PrismaClient } from '@prisma/client'
-import connection from '../db/connection'
 import AuthHandler from './auth/handler'
 import AuthRepository from './auth/repository'
 import AuthService from './auth/service'
@@ -28,7 +27,7 @@ export default function routes(app: Express) {
 
   const userHandler = new UserHandler()
 
-  const productRepo = new ProductRepository(connection)
+  const productRepo = new ProductRepository(prisma)
   const productService = new ProductService(productRepo)
   const productHandler = new ProductHandler(productService)
 
