@@ -1,27 +1,18 @@
-import { randomUUID } from 'node:crypto'
 import path from 'node:path'
+import { v2 as cloudinary } from 'cloudinary'
 import type { Request } from 'express'
 import multer from 'multer'
+import { CloudinaryStorage } from 'multer-storage-cloudinary'
+import 'dotenv/config'
 
-const PRODUCT_PHOTO = 'images'
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
+  api_key: process.env.CLOUDINARY_API_KEY as string,
+  api_secret: process.env.CLOUDINARY_API_SECRET as string,
+})
 
-const storage = multer.diskStorage({
-  filename(_, file, callback) {
-    const uniqueFilename = `${randomUUID()}${path.extname(file.originalname)}`
-    callback(null, uniqueFilename)
-  },
-  destination(_, file, callback) {
-    let dir: string
-    switch (file.fieldname) {
-      case PRODUCT_PHOTO:
-        dir = path.join(__dirname, '../../public/img/product-photo')
-        break
-      default:
-        dir = path.join(__dirname, '../../public/img')
-        break
-    }
-    callback(null, dir)
-  },
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
 })
 
 const fileFilter = (_: Request, file: Express.Multer.File, callback: any) => {
@@ -42,7 +33,7 @@ const fileFilter = (_: Request, file: Express.Multer.File, callback: any) => {
 }
 
 export default multer({
-  storage,
+  storage: cloudinaryStorage,
   fileFilter,
   limits: { fileSize: 1048576 /* 1MB */ },
 })
