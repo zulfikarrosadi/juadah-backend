@@ -10,8 +10,7 @@
     "lint": "npx biome lint ./src",
     "fix-lint": "npx biome lint --write --unsafe ./src",
     "format": "npx biome format --write ./src",
-    "prepare": "husky",
-    "build": "npx tsc"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*": [
