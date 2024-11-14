@@ -4,6 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "npx jest",
+    "postinstall": "prisma generate",
+    "build": "npx prisma generate && npx tsc",
     "dev": "npx ts-node-dev --respawn --transpile-only src/index.ts",
     "lint": "npx biome lint ./src",
     "fix-lint": "npx biome lint --write --unsafe ./src",
