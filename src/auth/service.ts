@@ -4,21 +4,24 @@ import type ApiResponse from '../schema'
 import type { Login, RegisterUser } from './schema'
 
 export interface User {
-  id: number
+  id: bigint
   fullname: string
   email: string
   password: string
 }
 
 interface AuthRepository {
-  createUser(data: RegisterUser): Promise<{ userId: number }>
+  createUser(
+    data: RegisterUser,
+    refreshToken: string,
+    otp: string,
+  ): Promise<{ id: bigint; fullname: string; email: string }>
   getUserByEmail(email: string): Promise<Partial<User>>
-  getUserById(id: number): Promise<Omit<User, 'password'>>
   saveTokenToDb(
     token: string,
-    userId: number,
+    userId: bigint,
   ): Promise<{ affectedRows: number }>
-  getTokenByUserId(userId: number): Promise<string>
+  getTokenByUserId(userId: bigint): Promise<string | null>
 }
 
 class AuthService extends Auth {
@@ -31,36 +34,33 @@ class AuthService extends Auth {
     token?: { accessToken: string; refreshToken: string }
   }> {
     try {
-      const newUser = await this.repository.createUser({
+      const accessToken = this.createAccessToken({
         fullname: data.fullname,
         email: data.email,
-        password: await this.hashPassword(data.password),
-      })
-
-      const user = await this.repository.getUserById(newUser.userId)
-      if (!user.email || !user.fullname) {
-        throw new Error('create user is fail, please try again')
-      }
-
-      const accessToken = this.createAccessToken({
-        fullname: user.fullname,
-        email: user.email,
-        userId: newUser.userId,
       })
       const refreshToken = this.createRefreshToken({
-        fullname: user.fullname,
-        email: user.email,
-        userId: newUser.userId,
+        fullname: data.fullname,
+        email: data.email,
       })
-      await this.repository.saveTokenToDb(refreshToken, newUser.userId)
+      const otp = this.generateOTP()
+      const newUser = await this.repository.createUser(
+        {
+          email: data.email,
+          fullname: data.fullname,
+          password: await this.hashPassword(data.password),
+        },
+        refreshToken,
+        otp,
+      )
+
       return {
         response: {
           status: 'success',
           data: {
             user: {
-              id: newUser.userId,
-              fullname: user.fullname,
-              email: user.email,
+              id: newUser.id,
+              fullname: newUser.fullname,
+              email: newUser.email,
             },
           },
         },
@@ -99,12 +99,10 @@ class AuthService extends Auth {
       const accessToken = this.createAccessToken({
         fullname: user.fullname,
         email: user.email,
-        userId: user.id,
       })
       const refreshToken = this.createRefreshToken({
         fullname: user.fullname,
         email: user.email,
-        userId: user.id,
       })
       this.repository.saveTokenToDb(refreshToken, user.id)
 
@@ -162,7 +160,6 @@ class AuthService extends Auth {
       const newAccessToken = this.createAccessToken({
         fullname: decodedData.fullname,
         email: decodedData.email,
-        userId: decodedData.userId,
       })
       return {
         response: {

@@ -17,13 +17,11 @@ export class Auth {
 
   protected createAccessToken(data: {
     fullname: string
-    userId: number
     email: string
   }) {
     return createNewToken({
       fullname: data.fullname,
       email: data.email,
-      userId: data.userId,
       expiration: accessTokenMaxAge,
     })
   }
@@ -31,11 +29,9 @@ export class Auth {
   protected createRefreshToken(data: {
     fullname: string
     email: string
-    userId: number
   }) {
     return createNewToken({
       fullname: data.fullname,
-      userId: data.userId,
       email: data.email,
       expiration: refreshTokenMaxAge,
     })

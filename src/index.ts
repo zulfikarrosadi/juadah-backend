@@ -7,6 +7,10 @@ import cors from 'cors'
 const app = express()
 const port = process.env.SERVER_PORT
 
+BigInt.prototype.toJSON = function () {
+  return this.toString()
+}
+
 app.use(
   cors({
     credentials: true,
