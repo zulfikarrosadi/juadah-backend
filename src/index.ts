@@ -25,3 +25,5 @@ app.listen(port, () => {
   routes(app)
   console.info(`Server running at port ${port}`)
 })
+
+export default app
