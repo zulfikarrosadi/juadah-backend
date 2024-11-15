@@ -11,4 +11,10 @@ type ApiResponse<Data> =
       }
     }
 
+export type UserInToken = {
+  fullname: string
+  email: string
+  role: 'ADMIN' | 'USER'
+}
+
 export default ApiResponse

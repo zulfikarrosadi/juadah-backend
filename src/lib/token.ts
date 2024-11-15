@@ -1,5 +1,6 @@
 import { type JwtPayload, sign, verify } from 'jsonwebtoken'
 import 'dotenv/config'
+import type { UserInToken } from '../schema'
 
 /**
  * 10 minutes in ms
@@ -10,10 +11,8 @@ export const accessTokenMaxAge = 600000
  */
 export const refreshTokenMaxAge = 864000000
 const tokenSecret = process.env.TOKEN_SECRET as string
-type decodedType = JwtPayload & {
-  fullname: string
-  email: string
-}
+
+type decodedType = JwtPayload & UserInToken
 
 export function verifyToken(token: string): {
   decodedData: decodedType | null
@@ -33,11 +32,13 @@ export function createNewToken(data: {
   fullname: string
   email: string
   expiration: number
+  role: 'ADMIN' | 'USER'
 }) {
   const token = sign(
     {
       tokenId: Math.random(),
       fullname: data.fullname,
+      role: data.role,
       email: data.email,
     },
     tokenSecret,

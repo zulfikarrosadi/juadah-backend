@@ -18,21 +18,25 @@ export class Auth {
   protected createAccessToken(data: {
     fullname: string
     email: string
+    role: 'ADMIN' | 'USER'
   }) {
     return createNewToken({
       fullname: data.fullname,
       email: data.email,
+      role: data.role,
       expiration: accessTokenMaxAge,
     })
   }
 
   protected createRefreshToken(data: {
     fullname: string
+    role: 'ADMIN' | 'USER'
     email: string
   }) {
     return createNewToken({
       fullname: data.fullname,
       email: data.email,
+      role: data.role,
       expiration: refreshTokenMaxAge,
     })
   }
