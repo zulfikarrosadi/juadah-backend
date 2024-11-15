@@ -10,6 +10,7 @@ import AuthHandler from './auth/handler'
 import AuthRepository from './auth/repository'
 import AuthService from './auth/service'
 import multer from './lib/upload'
+import adminAccess from './middlewares/adminAccess'
 import formDataParse from './middlewares/formDataParser'
 import ProductHandler from './product/handler'
 import ProductRepository from './product/repository'
@@ -46,6 +47,7 @@ router.get('/users', userHandler.getCurrentUser)
 router.post(
   '/products',
   formDataParse(multer.array('images', 5)),
+  adminAccess,
   validateInput(createProduct),
   productHandler.createProduct,
 )
@@ -53,6 +55,7 @@ router.get('/products', productHandler.getProducts)
 router.put(
   '/products/:id',
   formDataParse(multer.array('images', 5)),
+  adminAccess,
   validateInput(updateProduct),
   productHandler.updateProductById,
 )
