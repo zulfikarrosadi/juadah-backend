@@ -37,9 +37,15 @@ model users {
   refresh_token      String?
   email_verified     Boolean?  @default(false)
   verification_token String?   @db.Char(6)
+  role Role @default(USER) 
   ratings            ratings[]
 }
 
 enum crdb_internal_region {
   gcp_asia_southeast1 @map("gcp-asia-southeast1")
+}
+
+enum Role {
+  ADMIN
+  USER
 }
