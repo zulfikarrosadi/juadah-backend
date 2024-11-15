@@ -27,10 +27,17 @@ describe('auth service', () => {
 
   describe('register user', () => {
     it('should register new user', async () => {
-      authRepo.createUser.mockResolvedValue({ userId: 1 })
+      authRepo.createUser.mockResolvedValue({
+        id: BigInt(1),
+        role: 'USER',
+        email: VALID_EMAIL,
+        fullname: FULLNAME,
+      })
       authRepo.saveTokenToDb.mockResolvedValue({ affectedRows: 1 })
-      authRepo.getUserById.mockResolvedValue({
-        id: 1,
+      authRepo.getUserByEmail.mockResolvedValue({
+        id: BigInt(1),
+        role: 'USER',
+        password: '',
         fullname: FULLNAME,
         email: VALID_EMAIL,
       })
@@ -84,7 +91,8 @@ describe('auth service', () => {
 
     it('should fail caused wrong password', async () => {
       authRepo.getUserByEmail.mockResolvedValue({
-        id: 1,
+        id: BigInt(1),
+        role: 'USER',
         fullname: FULLNAME,
         email: 'testing@email.com',
         password: hashSync(VALID_PASSWORD, 10),
@@ -105,7 +113,8 @@ describe('auth service', () => {
 
     it('should success', async () => {
       authRepo.getUserByEmail.mockResolvedValue({
-        id: 1,
+        id: BigInt(1),
+        role: 'USER',
         fullname: FULLNAME,
         email: VALID_EMAIL,
         password: hashSync(VALID_PASSWORD, 10),
@@ -132,10 +141,10 @@ describe('auth service', () => {
       const validRefreshToken = createNewToken({
         email: VALID_EMAIL,
         fullname: FULLNAME,
-        userId: 1,
+        role: 'USER',
         expiration: refreshTokenMaxAge,
       })
-      authRepo.getTokenByUserId.mockResolvedValue(validRefreshToken)
+      authRepo.getTokenByEmail.mockResolvedValue(validRefreshToken)
       const result = await authService.refreshToken(validRefreshToken)
       expect(result).toHaveProperty('token')
       if (!result.token) {
@@ -161,13 +170,13 @@ describe('auth service', () => {
       const validRefreshToken = createNewToken({
         email: VALID_EMAIL,
         fullname: FULLNAME,
-        userId: 1,
+        role: 'USER',
         expiration: refreshTokenMaxAge,
       })
-      authRepo.getTokenByUserId.mockRejectedValue('token not found in database')
+      authRepo.getTokenByEmail.mockRejectedValue('token not found in database')
       const result = await authService.refreshToken(validRefreshToken)
 
-      expect(authRepo.getTokenByUserId).toHaveBeenCalled()
+      expect(authRepo.getTokenByEmail).toHaveBeenCalled()
       expect(result).not.toHaveProperty('token')
       expect(result.response.status).toBe('fail')
       if (result.response.status === 'fail') {
@@ -181,20 +190,20 @@ describe('auth service', () => {
       const tokenFromDb = createNewToken({
         email: VALID_EMAIL,
         fullname: FULLNAME,
-        userId: 1,
+        role: 'USER',
         expiration: refreshTokenMaxAge,
       })
-      authRepo.getTokenByUserId.mockResolvedValue(tokenFromDb)
+      authRepo.getTokenByEmail.mockResolvedValue(tokenFromDb)
 
       const tokenFromUser = createNewToken({
         email: INVALID_EMAIL,
         fullname: FULLNAME,
-        userId: 1,
+        role: 'USER',
         expiration: refreshTokenMaxAge,
       })
       const result = await authService.refreshToken(tokenFromUser)
 
-      expect(authRepo.getTokenByUserId).toHaveBeenCalled()
+      expect(authRepo.getTokenByEmail).toHaveBeenCalled()
       expect(result).not.toHaveProperty('token')
       expect(result.response.status).toBe('fail')
       if (result.response.status === 'fail') {
