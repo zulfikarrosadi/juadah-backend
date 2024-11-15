@@ -16,7 +16,12 @@ interface AuthRepository {
     data: RegisterUser,
     refreshToken: string,
     otp: string,
-  ): Promise<{ id: bigint; fullname: string; email: string }>
+  ): Promise<{
+    id: bigint
+    fullname: string
+    role: 'ADMIN' | 'USER'
+    email: string
+  }>
   getUserByEmail(email: string): Promise<Partial<User>>
   saveTokenToDb(
     token: string,
@@ -62,6 +67,7 @@ class AuthService extends Auth {
           data: {
             user: {
               id: newUser.id,
+              role: newUser.role,
               fullname: newUser.fullname,
               email: newUser.email,
             },
@@ -123,6 +129,7 @@ class AuthService extends Auth {
           data: {
             user: {
               id: user.id,
+              role: user.role,
               fullname: user.fullname,
               email: user.email,
             },
@@ -170,6 +177,7 @@ class AuthService extends Auth {
       }
       const newAccessToken = this.createAccessToken({
         fullname: decodedData.fullname,
+        role: decodedData.role,
         email: decodedData.email,
       })
       return {
@@ -178,6 +186,7 @@ class AuthService extends Auth {
           data: {
             user: {
               id: decodedData.userId,
+              role: decodedData.role,
               fullname: decodedData.fullname,
               email: decodedData.email,
             },
