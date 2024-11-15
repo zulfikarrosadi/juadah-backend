@@ -28,13 +28,7 @@ BigInt.prototype.toJSON = function () {
   return this.toString()
 }
 
-app.use(
-  cors({
-    credentials: true,
-    origin: ['*'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
-)
+app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
 
