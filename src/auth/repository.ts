@@ -26,6 +26,7 @@ class AuthRepository {
         select: {
           id: true,
           email: true,
+          role: true,
           fullname: true,
         },
       })
