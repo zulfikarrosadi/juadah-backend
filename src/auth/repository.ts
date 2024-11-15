@@ -54,6 +54,7 @@ class AuthRepository {
         id: true,
         email: true,
         fullname: true,
+        role: true,
         password: true,
       },
     })

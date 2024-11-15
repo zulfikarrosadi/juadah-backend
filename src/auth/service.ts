@@ -7,6 +7,7 @@ export interface User {
   id: bigint
   fullname: string
   email: string
+  role: 'ADMIN' | 'USER'
   password: string
 }
 
@@ -36,10 +37,12 @@ class AuthService extends Auth {
     try {
       const accessToken = this.createAccessToken({
         fullname: data.fullname,
+        role: 'USER',
         email: data.email,
       })
       const refreshToken = this.createRefreshToken({
         fullname: data.fullname,
+        role: 'USER',
         email: data.email,
       })
       const otp = this.generateOTP()
@@ -85,7 +88,13 @@ class AuthService extends Auth {
   }> {
     try {
       const user = await this.repository.getUserByEmail(data.email)
-      if (!user.password || !user.email || !user.id || !user.fullname) {
+      if (
+        !user.password ||
+        !user.email ||
+        !user.id ||
+        !user.role ||
+        !user.fullname
+      ) {
         throw new AuthCredentialError()
       }
       const isPasswordMatch = await this.verifyPassword(
@@ -98,10 +107,12 @@ class AuthService extends Auth {
 
       const accessToken = this.createAccessToken({
         fullname: user.fullname,
+        role: user.role,
         email: user.email,
       })
       const refreshToken = this.createRefreshToken({
         fullname: user.fullname,
+        role: user.role,
         email: user.email,
       })
       this.repository.saveTokenToDb(refreshToken, user.id)
