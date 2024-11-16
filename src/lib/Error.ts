@@ -10,7 +10,21 @@ export class EmailAlreadyExistsError extends Error {
   }
 }
 
-export class NotFoundError extends Error {}
+export class NotFoundError extends Error {
+  public code: number
+  constructor(message: string) {
+    super(message)
+    this.code = 404
+  }
+}
+
+export class BadRequestError extends Error {
+  public code: number
+  constructor(message: string) {
+    super(message)
+    this.code = 400
+  }
+}
 
 export class ServerError extends Error {
   public code: number

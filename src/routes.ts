@@ -9,6 +9,7 @@ import { PrismaClient } from '@prisma/client'
 import AuthHandler from './auth/handler'
 import AuthRepository from './auth/repository'
 import AuthService from './auth/service'
+import logger from './lib/logger'
 import multer from './lib/upload'
 import adminAccess from './middlewares/adminAccess'
 import formDataParse from './middlewares/formDataParser'
@@ -19,14 +20,14 @@ import ProductService from './product/service'
 import UserHandler from './user/handler'
 
 const prisma = new PrismaClient()
-const authRepo = new AuthRepository(prisma)
-const authService = new AuthService(authRepo)
+const authRepo = new AuthRepository(prisma, logger)
+const authService = new AuthService(authRepo, logger)
 const authHandler = new AuthHandler(authService)
 
 const userHandler = new UserHandler()
 
-const productRepo = new ProductRepository(prisma)
-const productService = new ProductService(productRepo)
+const productRepo = new ProductRepository(prisma, logger)
+const productService = new ProductService(productRepo, logger)
 const productHandler = new ProductHandler(productService)
 
 const router = Router()

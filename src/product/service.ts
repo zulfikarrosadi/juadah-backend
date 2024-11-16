@@ -1,5 +1,6 @@
 import type { JsonValue } from '@prisma/client/runtime/library'
 import { NotFoundError } from '../lib/Error'
+import { type Logger, getContext } from '../lib/logger'
 import type ApiResponse from '../schema'
 import type {
   CreateProduct,
@@ -35,17 +36,16 @@ interface ProductRepository {
 }
 
 class ProductService {
-  constructor(private repo: ProductRepository) {}
+  constructor(
+    private repo: ProductRepository,
+    private logger: Logger,
+  ) {}
 
   createProduct = async (
     data: CreateProduct,
   ): Promise<ApiResponse<Product>> => {
     try {
-      const priceInNumber = Number.parseInt(data.price, 10)
-      const newProduct = await this.repo.createProduct({
-        ...data,
-        price: priceInNumber,
-      })
+      const newProduct = await this.repo.createProduct(data)
       const result = await this.repo.getProductById(newProduct.id)
 
       return {
@@ -60,9 +60,15 @@ class ProductService {
           },
         },
       }
-    } catch (error) {
-      console.log('product service error: ', error)
-
+    } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'createProduct',
+        context,
+      )
       return {
         status: 'fail',
         errors: {
@@ -88,7 +94,15 @@ class ProductService {
           products: result,
         },
       }
-    } catch (error) {
+    } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'getProducts',
+        context,
+      )
       return {
         status: 'fail',
         errors: {
@@ -114,7 +128,15 @@ class ProductService {
           affectedRows: result.affectedRows,
         },
       }
-    } catch (error) {
+    } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'deleteProductById',
+        context,
+      )
       return {
         status: 'fail',
         errors: {
@@ -130,7 +152,6 @@ class ProductService {
     data: UpdateProductDataService,
   ): Promise<ApiResponse<Product>> => {
     const parsedId = BigInt(id)
-    const priceInNumber = Number.parseInt(data.price, 10)
     try {
       if (Number.isNaN(parsedId)) {
         throw new NotFoundError(
@@ -146,13 +167,12 @@ class ProductService {
         .filter((image) => !data.images.removed.includes(image))
         .filter(Boolean)
       if (finalImages.length > 5) {
-        console.log(finalImages)
         throw new Error('each product can only have 5 images at max')
       }
       const updatedProduct = await this.repo.updateProductById(parsedId, {
         name: data.name,
         description: data.description,
-        price: priceInNumber,
+        price: data.price,
         images: finalImages,
       })
 
@@ -168,9 +188,15 @@ class ProductService {
           },
         },
       }
-    } catch (error) {
-      console.log(error)
-
+    } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'updateProductById',
+        context,
+      )
       return {
         status: 'fail',
         errors: {

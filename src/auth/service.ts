@@ -1,5 +1,7 @@
 import { Auth } from '../lib/Auth'
 import { AuthCredentialError } from '../lib/Error'
+import type { Logger } from '../lib/logger'
+import { getContext } from '../lib/logger'
 import type ApiResponse from '../schema'
 import type { Login, RegisterUser } from './schema'
 
@@ -26,12 +28,15 @@ interface AuthRepository {
   saveTokenToDb(
     token: string,
     userId: bigint,
-  ): Promise<{ affectedRows: number }>
+  ): Promise<{ affectedRows: number } | undefined>
   getTokenByEmail(email: string): Promise<string | null>
 }
 
 class AuthService extends Auth {
-  constructor(public repository: AuthRepository) {
+  constructor(
+    public repository: AuthRepository,
+    private logger: Logger,
+  ) {
     super()
   }
 
@@ -76,11 +81,19 @@ class AuthService extends Auth {
         token: { accessToken, refreshToken },
       }
     } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'registerUser',
+        context,
+      )
       return {
         response: {
           status: 'fail',
           errors: {
-            code: typeof error.code === 'number' ? error.code : 400,
+            code: error.code || 400,
             message: error.message || error,
           },
         },
@@ -138,6 +151,8 @@ class AuthService extends Auth {
         token: { accessToken, refreshToken },
       }
     } catch (error: any) {
+      const context = getContext()
+      this.logger('error', error.message || error, 'service', 'login', context)
       if (error.code && error.code === 'ECONNREFUSED') {
         return {
           response: {
@@ -153,7 +168,7 @@ class AuthService extends Auth {
       return {
         response: {
           status: 'fail',
-          errors: { code: 400, message: error.message },
+          errors: { code: error.code || 400, message: error.message },
         },
       }
     }
@@ -195,11 +210,19 @@ class AuthService extends Auth {
         token: newAccessToken,
       }
     } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'refreshToken',
+        context,
+      )
       return {
         response: {
           status: 'fail',
           errors: {
-            code: 400,
+            code: error.code || 400,
             message: error.message || error,
           },
         },
