@@ -26,8 +26,8 @@ const authHandler = new AuthHandler(authService)
 
 const userHandler = new UserHandler()
 
-const productRepo = new ProductRepository(prisma)
-const productService = new ProductService(productRepo)
+const productRepo = new ProductRepository(prisma, logger)
+const productService = new ProductService(productRepo, logger)
 const productHandler = new ProductHandler(productService)
 
 const router = Router()
