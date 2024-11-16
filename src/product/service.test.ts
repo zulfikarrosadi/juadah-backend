@@ -1,4 +1,5 @@
 import { ServerError } from '../lib/Error'
+import logger from '../lib/logger'
 import type ProductRepository from './repository'
 import type { CreateProduct, Product } from './schema'
 import ProductService from './service'
@@ -12,23 +13,26 @@ describe('product service', () => {
     price: 10000,
   }
   const PRODUCT: Product = {
-    id: 1,
+    id: 1n,
     name: 'cheese cake',
     description: 'cheese cake can make your day like sunday',
     price: 10000,
+    images: ['image-1.png'],
   }
   const PRODUCTS: Product[] = [
     {
-      id: 1,
+      id: 1n,
       name: 'cheese cake',
       description: 'cheese cake can make your day like sunday',
       price: 10000,
+      images: ['image-1.png'],
     },
     {
-      id: 30,
+      id: 30n,
       name: 'chocolate cake',
       description: 'chocolate cake can make your day great',
       price: 10000,
+      images: ['image-1.png'],
     },
   ]
 
@@ -39,7 +43,7 @@ describe('product service', () => {
       getProducts: jest.fn(),
     } as unknown as jest.Mocked<ProductRepository>
 
-    productService = new ProductService(productRepo)
+    productService = new ProductService(productRepo, logger)
   })
 
   describe('create product', () => {
@@ -63,8 +67,9 @@ describe('product service', () => {
     it('should success create new product', async () => {
       productRepo.createProduct.mockResolvedValueOnce({
         affectedRows: 1,
-        id: 1,
+        id: 1n,
       })
+      // @ts-ignore
       productRepo.getProductById.mockResolvedValueOnce(PRODUCT)
 
       const result = await productService.createProduct(NEW_VALID_PRODUCT)
@@ -88,6 +93,7 @@ describe('product service', () => {
     })
 
     it('should return first 30 products', async () => {
+      // @ts-ignore
       productRepo.getProducts.mockResolvedValueOnce(PRODUCTS)
 
       const result = await productService.getProducts()
@@ -95,12 +101,17 @@ describe('product service', () => {
       if (result.status !== 'success') {
         fail('product service return fail expected success')
       }
-      expect(result.data?.meta?.lastProductId).toBe(30)
+      expect(result.data?.meta?.lastProductId).toBe(30n)
       expect(result.data?.products?.length).toBe(2)
     })
     it('should return 30 products after the last id', async () => {
       productRepo.getProducts.mockResolvedValueOnce([
-        { id: 30, name: 'choco', description: 'choco cake', price: 10000 },
+        {
+          id: 30n,
+          name: 'choco',
+          description: 'choco cake',
+          images: ['image-1.png'],
+        },
       ])
 
       const result = await productService.getProducts('1')
@@ -108,7 +119,7 @@ describe('product service', () => {
       if (result.status !== 'success') {
         fail('product service status return other than success')
       }
-      expect(result.data?.meta?.lastProductId).toBe(30)
+      expect(result.data?.meta?.lastProductId).toBe(30n)
       expect(result.data?.products.length).toBe(1)
     })
   })

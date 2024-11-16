@@ -1,5 +1,6 @@
 import { hashSync } from 'bcrypt'
 import { AuthCredentialError, EmailAlreadyExistsError } from '../lib/Error'
+import logger from '../lib/logger'
 import { createNewToken, refreshTokenMaxAge, verifyToken } from '../lib/token'
 import type AuthRepository from './repository'
 import AuthService from './service'
@@ -17,12 +18,13 @@ describe('auth service', () => {
     authRepo = {
       createUser: jest.fn(),
       getUserById: jest.fn(),
+      getTokenByEmail: jest.fn(),
       getUserByEmail: jest.fn(),
       saveTokenToDb: jest.fn(),
       getTokenByUserId: jest.fn(),
     } as unknown as jest.Mocked<AuthRepository>
 
-    authService = new AuthService(authRepo)
+    authService = new AuthService(authRepo, logger)
   })
 
   describe('register user', () => {
@@ -53,7 +55,12 @@ describe('auth service', () => {
       expect(newUser.response).toEqual({
         status: 'success',
         data: {
-          user: { id: 1, email: VALID_EMAIL, fullname: FULLNAME },
+          user: {
+            id: 1n,
+            email: VALID_EMAIL,
+            fullname: FULLNAME,
+            role: 'USER',
+          },
         },
       })
       expect(newUser.token?.accessToken).not.toBeNull()
@@ -131,7 +138,14 @@ describe('auth service', () => {
       expect(result).toHaveProperty('token')
       expect(result.response).toEqual({
         status: 'success',
-        data: { user: { id: 1, email: VALID_EMAIL, fullname: FULLNAME } },
+        data: {
+          user: {
+            id: 1n,
+            email: VALID_EMAIL,
+            fullname: FULLNAME,
+            role: 'USER',
+          },
+        },
       })
     })
   })
@@ -152,8 +166,8 @@ describe('auth service', () => {
       }
       const { decodedData: accessToken } = verifyToken(result.token)
       expect(accessToken).toHaveProperty('email')
-      expect(accessToken).toHaveProperty('userId')
-      expect(accessToken?.userId).toBe(1)
+      expect(accessToken).toHaveProperty('role')
+      expect(accessToken).toHaveProperty('fullname')
       expect(accessToken?.email).toBe(VALID_EMAIL)
     })
 
