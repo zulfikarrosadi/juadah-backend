@@ -17,8 +17,8 @@ type Layer = 'repository' | 'service' | 'handler'
 type LoggerContext = {
   operationId: string
   layer: Layer
-  requestId: string
-  userId: number
+  requestId?: string
+  userId?: number
 }
 
 function logger(
@@ -35,7 +35,7 @@ function logger(
         operationId: operationId,
         layer: layer,
         userId: context?.userId,
-        requestId: context?.userId,
+        requestId: context?.requestId,
       },
     })
   }
