@@ -1,62 +1,64 @@
-import type { Express } from 'express'
+import { Router } from 'express'
 import { loginSchema } from './auth/schema'
 import { deserializeToken } from './middlewares/deserializeToken'
 import requiredLogin from './middlewares/requiredLogin'
 import { validateInput } from './middlewares/validateInput'
 import { createUserSchema } from './user/schema'
 
-import connection from '../db/connection'
+import { PrismaClient } from '@prisma/client'
 import AuthHandler from './auth/handler'
 import AuthRepository from './auth/repository'
 import AuthService from './auth/service'
+import logger from './lib/logger'
 import multer from './lib/upload'
+import adminAccess from './middlewares/adminAccess'
 import formDataParse from './middlewares/formDataParser'
-import sanitizeInput from './middlewares/sanitizeInput'
 import ProductHandler from './product/handler'
 import ProductRepository from './product/repository'
 import { createProduct, updateProduct } from './product/schema'
 import ProductService from './product/service'
 import UserHandler from './user/handler'
-import UserSerivce from './user/service'
 
-export default function routes(app: Express) {
-  const authRepo = new AuthRepository(connection)
-  const authService = new AuthService(authRepo)
-  const authHandler = new AuthHandler(authService)
+const prisma = new PrismaClient()
+const authRepo = new AuthRepository(prisma, logger)
+const authService = new AuthService(authRepo, logger)
+const authHandler = new AuthHandler(authService)
 
-  const userService = new UserSerivce(authRepo)
-  const userHandler = new UserHandler(userService)
+const userHandler = new UserHandler()
 
-  const productRepo = new ProductRepository(connection)
-  const productService = new ProductService(productRepo)
-  const productHandler = new ProductHandler(productService)
+const productRepo = new ProductRepository(prisma, logger)
+const productService = new ProductService(productRepo, logger)
+const productHandler = new ProductHandler(productService)
 
-  app.use(sanitizeInput)
-  app.post(
-    '/api/register',
-    //@ts-ignore
-    validateInput(createUserSchema),
-    authHandler.registerUser,
-  )
-  app.post('/api/login', validateInput(loginSchema), authHandler.login)
-  app.get('/api/refresh', authHandler.refreshToken)
+const router = Router()
 
-  app.use(deserializeToken)
-  app.use(requiredLogin)
-  app.get('/api/users', userHandler.getCurrentUser)
-  app.get('/api/users/:id', userHandler.getUserById)
+router.post(
+  '/register',
+  //@ts-ignore
+  validateInput(createUserSchema),
+  authHandler.registerUser,
+)
+router.post('/login', validateInput(loginSchema), authHandler.login)
+router.get('/refresh', authHandler.refreshToken)
 
-  app.post(
-    '/api/products',
-    formDataParse(multer.array('images', 5)),
-    validateInput(createProduct),
-    productHandler.createProduct,
-  )
-  app.get('/api/products', productHandler.getProducts)
-  app.put(
-    '/api/products/:id',
-    formDataParse(multer.array('images', 5)),
-    validateInput(updateProduct),
-    productHandler.updateProductById,
-  )
-}
+router.use(deserializeToken)
+router.use(requiredLogin)
+router.get('/users', userHandler.getCurrentUser)
+
+router.post(
+  '/products',
+  formDataParse(multer.array('images', 5)),
+  adminAccess,
+  validateInput(createProduct),
+  productHandler.createProduct,
+)
+router.get('/products', productHandler.getProducts)
+router.put(
+  '/products/:id',
+  formDataParse(multer.array('images', 5)),
+  adminAccess,
+  validateInput(updateProduct),
+  productHandler.updateProductById,
+)
+
+export default router

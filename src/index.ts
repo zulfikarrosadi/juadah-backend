@@ -1,23 +1,24 @@
 import cookieParser from 'cookie-parser'
 import express from 'express'
-import routes from './routes'
 import 'dotenv/config'
 import cors from 'cors'
-
+import sanitizeInput from './middlewares/sanitizeInput'
 const app = express()
+import routes from './routes'
+
 const port = process.env.SERVER_PORT
 
-app.use(
-  cors({
-    credentials: true,
-    origin: ['http://localhost:5173'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
-)
+BigInt.prototype.toJSON = function () {
+  return this.toString()
+}
+
+app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
-
+app.use(sanitizeInput)
+app.use('/api/', routes)
 app.listen(port, () => {
-  routes(app)
   console.info(`Server running at port ${port}`)
 })
+
+export default app

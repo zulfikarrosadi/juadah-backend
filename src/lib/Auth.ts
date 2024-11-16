@@ -17,28 +17,37 @@ export class Auth {
 
   protected createAccessToken(data: {
     fullname: string
-    userId: number
     email: string
+    role: 'ADMIN' | 'USER'
   }) {
     return createNewToken({
       fullname: data.fullname,
       email: data.email,
-      userId: data.userId,
+      role: data.role,
       expiration: accessTokenMaxAge,
     })
   }
 
   protected createRefreshToken(data: {
     fullname: string
+    role: 'ADMIN' | 'USER'
     email: string
-    userId: number
   }) {
     return createNewToken({
       fullname: data.fullname,
-      userId: data.userId,
       email: data.email,
+      role: data.role,
       expiration: refreshTokenMaxAge,
     })
+  }
+
+  public generateOTP() {
+    const otp = []
+    for (let i = 0; i < 6; i++) {
+      const randomNumber = Math.round(Math.random() * 9)
+      otp.push(randomNumber)
+    }
+    return otp.join('')
   }
 
   protected verifyToken(token: string) {

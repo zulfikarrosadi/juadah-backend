@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model products {
+  id          BigInt    @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  images      Json?
+  ratings     ratings[]
+}
+
+model ratings {
+  id_user    BigInt
+  id_product BigInt
+  star       Int
+  message    String
+  products   products @relation(fields: [id_product], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users      users    @relation(fields: [id_user], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_user, id_product])
+}
+
+model users {
+  id                 BigInt    @id @default(autoincrement())
+  fullname           String
+  email              String    @unique
+  password           String
+  refresh_token      String?
+  email_verified     Boolean?  @default(false)
+  verification_token String?   @db.Char(6)
+  role Role @default(USER) 
+  ratings            ratings[]
+}
+
+enum crdb_internal_region {
+  gcp_asia_southeast1 @map("gcp-asia-southeast1")
+}
+
+enum Role {
+  ADMIN
+  USER
+}

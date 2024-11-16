@@ -1,28 +1,42 @@
 import { Auth } from '../lib/Auth'
 import { AuthCredentialError } from '../lib/Error'
+import type { Logger } from '../lib/logger'
+import { getContext } from '../lib/logger'
 import type ApiResponse from '../schema'
 import type { Login, RegisterUser } from './schema'
 
 export interface User {
-  id: number
+  id: bigint
   fullname: string
   email: string
+  role: 'ADMIN' | 'USER'
   password: string
 }
 
 interface AuthRepository {
-  createUser(data: RegisterUser): Promise<{ userId: number }>
+  createUser(
+    data: RegisterUser,
+    refreshToken: string,
+    otp: string,
+  ): Promise<{
+    id: bigint
+    fullname: string
+    role: 'ADMIN' | 'USER'
+    email: string
+  }>
   getUserByEmail(email: string): Promise<Partial<User>>
-  getUserById(id: number): Promise<Omit<User, 'password'>>
   saveTokenToDb(
     token: string,
-    userId: number,
-  ): Promise<{ affectedRows: number }>
-  getTokenByUserId(userId: number): Promise<string>
+    userId: bigint,
+  ): Promise<{ affectedRows: number } | undefined>
+  getTokenByEmail(email: string): Promise<string | null>
 }
 
 class AuthService extends Auth {
-  constructor(public repository: AuthRepository) {
+  constructor(
+    public repository: AuthRepository,
+    private logger: Logger,
+  ) {
     super()
   }
 
@@ -31,47 +45,55 @@ class AuthService extends Auth {
     token?: { accessToken: string; refreshToken: string }
   }> {
     try {
-      const newUser = await this.repository.createUser({
-        fullname: data.fullname,
-        email: data.email,
-        password: await this.hashPassword(data.password),
-      })
-
-      const user = await this.repository.getUserById(newUser.userId)
-      if (!user.email || !user.fullname) {
-        throw new Error('create user is fail, please try again')
-      }
-
       const accessToken = this.createAccessToken({
-        fullname: user.fullname,
-        email: user.email,
-        userId: newUser.userId,
+        fullname: data.fullname,
+        role: 'USER',
+        email: data.email,
       })
       const refreshToken = this.createRefreshToken({
-        fullname: user.fullname,
-        email: user.email,
-        userId: newUser.userId,
+        fullname: data.fullname,
+        role: 'USER',
+        email: data.email,
       })
-      await this.repository.saveTokenToDb(refreshToken, newUser.userId)
+      const otp = this.generateOTP()
+      const newUser = await this.repository.createUser(
+        {
+          email: data.email,
+          fullname: data.fullname,
+          password: await this.hashPassword(data.password),
+        },
+        refreshToken,
+        otp,
+      )
+
       return {
         response: {
           status: 'success',
           data: {
             user: {
-              id: newUser.userId,
-              fullname: user.fullname,
-              email: user.email,
+              id: newUser.id,
+              role: newUser.role,
+              fullname: newUser.fullname,
+              email: newUser.email,
             },
           },
         },
         token: { accessToken, refreshToken },
       }
     } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'registerUser',
+        context,
+      )
       return {
         response: {
           status: 'fail',
           errors: {
-            code: typeof error.code === 'number' ? error.code : 400,
+            code: error.code || 400,
             message: error.message || error,
           },
         },
@@ -85,7 +107,13 @@ class AuthService extends Auth {
   }> {
     try {
       const user = await this.repository.getUserByEmail(data.email)
-      if (!user.password || !user.email || !user.id || !user.fullname) {
+      if (
+        !user.password ||
+        !user.email ||
+        !user.id ||
+        !user.role ||
+        !user.fullname
+      ) {
         throw new AuthCredentialError()
       }
       const isPasswordMatch = await this.verifyPassword(
@@ -98,13 +126,13 @@ class AuthService extends Auth {
 
       const accessToken = this.createAccessToken({
         fullname: user.fullname,
+        role: user.role,
         email: user.email,
-        userId: user.id,
       })
       const refreshToken = this.createRefreshToken({
         fullname: user.fullname,
+        role: user.role,
         email: user.email,
-        userId: user.id,
       })
       this.repository.saveTokenToDb(refreshToken, user.id)
 
@@ -114,6 +142,7 @@ class AuthService extends Auth {
           data: {
             user: {
               id: user.id,
+              role: user.role,
               fullname: user.fullname,
               email: user.email,
             },
@@ -122,6 +151,8 @@ class AuthService extends Auth {
         token: { accessToken, refreshToken },
       }
     } catch (error: any) {
+      const context = getContext()
+      this.logger('error', error.message || error, 'service', 'login', context)
       if (error.code && error.code === 'ECONNREFUSED') {
         return {
           response: {
@@ -137,7 +168,7 @@ class AuthService extends Auth {
       return {
         response: {
           status: 'fail',
-          errors: { code: 400, message: error.message },
+          errors: { code: error.code || 400, message: error.message },
         },
       }
     }
@@ -153,16 +184,16 @@ class AuthService extends Auth {
       if (!decodedData) {
         throw new Error('invalid refresh token')
       }
-      const tokenFromDb = await this.repository.getTokenByUserId(
-        decodedData.userId,
+      const tokenFromDb = await this.repository.getTokenByEmail(
+        decodedData.email,
       )
       if (token !== tokenFromDb) {
         throw new Error('invalid refresh token')
       }
       const newAccessToken = this.createAccessToken({
         fullname: decodedData.fullname,
+        role: decodedData.role,
         email: decodedData.email,
-        userId: decodedData.userId,
       })
       return {
         response: {
@@ -170,6 +201,7 @@ class AuthService extends Auth {
           data: {
             user: {
               id: decodedData.userId,
+              role: decodedData.role,
               fullname: decodedData.fullname,
               email: decodedData.email,
             },
@@ -178,11 +210,19 @@ class AuthService extends Auth {
         token: newAccessToken,
       }
     } catch (error: any) {
+      const context = getContext()
+      this.logger(
+        'error',
+        error.message || error,
+        'service',
+        'refreshToken',
+        context,
+      )
       return {
         response: {
           status: 'fail',
           errors: {
-            code: 400,
+            code: error.code || 400,
             message: error.message || error,
           },
         },

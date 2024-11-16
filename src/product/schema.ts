@@ -33,7 +33,7 @@ export const updateProduct = z.object({
 })
 
 export type CreateProduct = z.TypeOf<typeof createProduct>
-export type Product = z.TypeOf<typeof createProduct> & { id: number }
+export type Product = z.TypeOf<typeof createProduct> & { id: bigint }
 export type UpdateProduct = z.TypeOf<typeof updateProduct>
 export type UpdateProductDataService = {
   name: string
