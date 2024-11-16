@@ -31,7 +31,7 @@ class ProductHandler {
   ) => {
     let productPhotos: string[]
     if (req.files?.length) {
-      productPhotos = req.files.map((file) => file.filename)
+      productPhotos = req.files.map((file) => file.path)
     } else {
       productPhotos = ['']
     }
@@ -68,7 +68,7 @@ class ProductHandler {
   ) => {
     let newProductPhotos: string[]
     if (req.files?.length) {
-      newProductPhotos = req.files.map((file) => file.filename)
+      newProductPhotos = req.files.map((file) => file.path)
     } else {
       newProductPhotos = ['']
     }

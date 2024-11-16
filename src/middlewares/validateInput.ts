@@ -1,12 +1,11 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { AnyZodObject } from 'zod'
 import type ApiResponse from '../schema'
-import type { FailResponse, SuccessResponse } from '../schema'
 
 export function validateInput(schema: AnyZodObject) {
   return async (
     req: Request,
-    res: Response<ApiResponse<SuccessResponse, FailResponse>>,
+    res: Response<ApiResponse<unknown>>,
     next: NextFunction,
   ) => {
     try {
