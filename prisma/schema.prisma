@@ -1,11 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
-binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-1.1.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -16,6 +16,7 @@ model products {
   price       Float
   images      Json?
   ratings     ratings[]
+  orders      orders[]
 }
 
 model ratings {
@@ -30,15 +31,49 @@ model ratings {
 }
 
 model users {
-  id                 BigInt    @id @default(autoincrement())
+  id                 BigInt     @id @default(autoincrement())
   fullname           String
-  email              String    @unique
+  email              String     @unique
   password           String
   refresh_token      String?
-  email_verified     Boolean?  @default(false)
-  verification_token String?   @db.Char(6)
-  role Role @default(USER) 
+  email_verified     Boolean?   @default(false)
+  verification_token String?    @db.Char(6)
+  role               Role       @default(USER)
   ratings            ratings[]
+  orders             orders[]
+  adresses           adresses[]
+}
+
+model adresses {
+  id           Int    @id @default(autoincrement())
+  province     String
+  city         String
+  subdistrict  String
+  village      String
+  postcal_code String @db.Char(6)
+  full_address String
+  user_id      BigInt
+
+  user   users    @relation(fields: [user_id], references: [id])
+  orders orders[]
+}
+
+model orders {
+  id                 String             @id
+  transaction_id     String?
+  user_id            BigInt
+  product_id         BigInt
+  amount             Int // how many product user bought
+  total_price        String // amount x product price
+  transaction_status Transaction_Status?
+  created_at         BigInt
+  completed_at       BigInt?
+  payment_type       String?
+  address_id         Int
+
+  user    users    @relation(fields: [user_id], references: [id])
+  product products @relation(fields: [product_id], references: [id])
+  address adresses @relation(fields: [address_id], references: [id])
 }
 
 enum crdb_internal_region {
@@ -48,4 +83,17 @@ enum crdb_internal_region {
 enum Role {
   ADMIN
   USER
+}
+
+enum Transaction_Status {
+  capture
+  settlement
+  pending
+  deny
+  cancel
+  expire
+  failure
+  refund
+  partial_refund
+  authorize
 }
