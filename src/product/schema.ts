@@ -37,6 +37,7 @@ export type UpdateProductDataService = {
     new: string[]
   }
 }
-export type FlattenUpdateProduct = Omit<UpdateProduct, 'images'> & {
+export type FlattenUpdateProduct = Omit<UpdateProduct, 'images' | 'price'> & {
   images: string[]
+  price: number
 }
