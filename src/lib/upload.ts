@@ -4,6 +4,7 @@ import type { Request } from 'express'
 import multer from 'multer'
 import { CloudinaryStorage } from 'multer-storage-cloudinary'
 import 'dotenv/config'
+import { CustomValidationError } from './Error'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME as string,
@@ -23,10 +24,12 @@ const fileFilter = (_: Request, file: Express.Multer.File, callback: any) => {
   if (validFormat.includes(fileFormat) && mimetype.includes('image')) {
     return callback(null, true)
   }
+  console.log(file)
 
   return callback(
-    new Error(
+    new CustomValidationError(
       'invalid file format, please only upload file with .png or .jpg extension',
+      file.fieldname,
     ),
     false,
   )

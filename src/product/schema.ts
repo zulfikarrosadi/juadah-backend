@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { ZodError, z } from 'zod'
 
 export const createProduct = z.object({
   name: z
@@ -7,25 +7,14 @@ export const createProduct = z.object({
   description: z
     .string({ message: 'product description is required' })
     .min(1, 'product description is required'),
-  price: z.string().transform((val) => {
-    const valInNumber = Number.parseFloat(val)
-    if (Number.isNaN(valInNumber)) {
-      throw new Error('product price is invalid')
-    }
-  }),
+  price: z.string(),
   images: z.string().array().optional(),
 })
 
 export const updateProduct = z.object({
   name: z.string({ required_error: 'name is required' }),
   description: z.string({ required_error: 'description is required' }),
-  price: z.string({ required_error: 'price is required' }).transform((val) => {
-    const valInNumber = Number.parseFloat(val)
-    if (Number.isNaN(valInNumber)) {
-      throw new Error('product price is invalid')
-    }
-    return valInNumber
-  }),
+  price: z.string({ required_error: 'price is required' }),
   images: z.object({
     removed: z.array(z.string(), { required_error: 'this field is required' }),
   }),

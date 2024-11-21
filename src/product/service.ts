@@ -1,5 +1,9 @@
 import type { JsonValue } from '@prisma/client/runtime/library'
-import { BadRequestError, NotFoundError } from '../lib/Error'
+import {
+  BadRequestError,
+  CustomValidationError,
+  NotFoundError,
+} from '../lib/Error'
 import { type Logger, getContext } from '../lib/logger'
 import type ApiResponse from '../schema'
 import type {
@@ -195,9 +199,7 @@ class ProductService {
           'createProduct',
           context,
         )
-        throw new BadRequestError(
-          'fail to create product, make sure to insert correct information and try again',
-        )
+        throw new CustomValidationError('price should be number', 'price')
       }
 
       const oldProduct = await this.repo.getProductById(parsedId)
@@ -238,6 +240,18 @@ class ProductService {
         'updateProductById',
         context,
       )
+      if (error instanceof CustomValidationError) {
+        return {
+          status: 'fail',
+          errors: {
+            code: 400,
+            message: 'validation errors',
+            details: {
+              [error.fieldname]: error.message,
+            },
+          },
+        }
+      }
       if (error instanceof SyntaxError) {
         return {
           status: 'fail',
