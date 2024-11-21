@@ -151,8 +151,8 @@ class ProductService {
     id: string,
     data: UpdateProductDataService,
   ): Promise<ApiResponse<Product>> => {
-    const parsedId = BigInt(id)
     try {
+      const parsedId = BigInt(id)
       if (Number.isNaN(parsedId)) {
         throw new NotFoundError(
           "you are trying to update the product that doesn't exists",
@@ -197,6 +197,15 @@ class ProductService {
         'updateProductById',
         context,
       )
+      if (error instanceof SyntaxError) {
+        return {
+          status: 'fail',
+          errors: {
+            code: 404,
+            message: 'fail to update product, product not found',
+          },
+        }
+      }
       return {
         status: 'fail',
         errors: {
