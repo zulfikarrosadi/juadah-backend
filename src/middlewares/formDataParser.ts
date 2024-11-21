@@ -8,7 +8,10 @@ export default function formDataParse(multer: any) {
           status: 'fail',
           errors: {
             code: 400,
-            message: err.message,
+            message: 'validation errors',
+            details: {
+              [err.fieldname]: err.message,
+            },
           },
         })
       }

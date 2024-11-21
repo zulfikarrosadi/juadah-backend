@@ -12,6 +12,7 @@ export function validateInput(schema: AnyZodObject) {
       schema.parse(req.body)
       return next()
     } catch (error: any) {
+      console.log(error)
       return res.status(400).send({
         status: 'fail',
         errors: {

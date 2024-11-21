@@ -1,0 +1,433 @@
+
+openapi: 3.0.3
+info:
+  title: Juadah API
+  description: E-commerce for backery
+  version: 0.3.0
+servers:
+  - url: https://juadah-backend.vercel.app
+  - url: http://localhost:3000
+tags:
+  - name: Authentication
+  - name: Products
+components:
+  securitySchemes:
+    cookieAuth: # arbitrary name for the security scheme; will be used in the "security" key later
+      type: apiKey
+      in: cookie
+      name: accessToken # cookie name
+  headers:
+    Set-Cookie-accessToken:
+      description: access token cookie.
+      schema:
+        type: string
+        example: accessToken=abcde12345; Path=/; HttpOnly
+    Set-Cookie-refreshToken:
+      description: refresh token cookie.
+      schema:
+        type: string
+        example: refreshToken=token12345; Path=/api/refresh; Secure
+  examples:
+    ValidationError:
+      value:
+        status: fail
+        errors:
+          code: 400
+          message: validation error
+          details:
+            email: invalid email format
+            password: password should have minimum 6 characters length
+    InvalidCredentials:
+      value:
+        status: fail
+        errors:
+          code: 400
+          message: email or password is incorrect
+    NotFound:
+      value:
+        status: fail
+        errors:
+          code: 404
+          message: resource you're looking for is not found
+  schemas:
+    CreateProducts:
+      required:
+        - name
+        - price
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        images:
+          type: string
+          format: binary
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        errors:
+          type: object
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+            details:
+              type: object
+          required:
+            - code
+            - message
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+              
+paths:
+  /api/register:
+    post:
+      summary: "create new account"
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                fullname:
+                  type: string
+                password:
+                  type: string
+                passwordConfirmation:
+                  type: string
+      responses:
+        '201':
+          description: account created successfully
+          headers:
+            Set-Cookie-accessToken:
+              $ref: '#/components/headers/Set-Cookie-accessToken'
+            Set-Cookie-refreshToken:
+              $ref: '#/components/headers/Set-Cookie-refreshToken'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                status: success
+                data:
+                  users:
+                    id: 1
+                    fullname: zulfikar
+                    email: email@example.com
+        '400':
+          description: bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation error:
+                  $ref: '#/components/examples/ValidationError'
+  /api/login:
+    post:
+      summary: login to existing account
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: successfully login to existing account
+          headers:
+            Set-Cookie-accessToken:
+              $ref: '#/components/headers/Set-Cookie-accessToken'
+            Set-Cookie-refreshToken:
+              $ref: '#/components/headers/Set-Cookie-refreshToken'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                status: success
+                data: 
+                  users:
+                    id: 1
+                    fullname: zulfikar
+                    email: email@example.com
+        '400':
+          description: validation error or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation error:
+                  $ref: '#/components/examples/ValidationError'
+                invalid email or password:
+                  $ref: '#/components/examples/InvalidCredentials'
+  /api/refresh:
+    get:
+      summary: renew access token
+      tags:
+        - Authentication
+      parameters: 
+        - in: cookie
+          name: refreshToken
+          required: true
+          schema:
+            type: string
+            example: token123
+      responses:
+        '200':
+          description: successfully renew access token
+          headers:
+            Set-Cookie-accessToken:
+              $ref: '#/components/headers/Set-Cookie-accessToken'
+            Set-Cookie-refreshToken:
+              $ref: '#/components/headers/Set-Cookie-refreshToken'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example: 
+                status: success
+                data: 
+                  users:
+                    id: 1
+                    fullname: zulfikar
+                    email: email@example.com
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                empty refresh token:
+                  value:
+                    status: fail
+                    errors:
+                      code: 400
+                      message: invalid request, refresh token unavailable
+                invalid refresh token:
+                  value:
+                    status: fail
+                    errors:
+                      code: 400
+                      message: invalid request, refresh token is invalid
+  /api/products:
+    get:
+      summary: get products with infinite scroll features
+      description: this is done because we have infinite scrolling endpoint, you can request the infinite products by adding query parameter
+      parameters:
+        - in: query
+          required: false
+          name: last_id
+          description: by providing the last_id query params, you can get the next 50 products from the last id you provided here. for example if you put last_id 50 you'll receive the next 50 products from 51-100.
+          schema:
+            type: number
+            example: 50
+      tags: 
+        - Products
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: successfully get the first 50 products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                status: success
+                data:
+                  meta:
+                    lastProductId: 2
+                  products:
+                    - id: 1
+                      name: Kue Bolu
+                      description: Kue bolu paling enak
+                      price: 10000
+                      images:
+                        - path/to/images.png
+                        - path/to/images.png
+                    - id: 2
+                      name: Kue Kotak
+                      description: null
+                      price: 10000
+                      images:
+        404:
+          description: no products found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not found:
+                  $ref: '#/components/examples/NotFound'
+    post:
+      summary: create new product
+      tags:
+        - Products
+      security: 
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateProducts'
+      responses:
+        201:
+          description: products created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                status: success
+                data:
+                  products:
+                    id: 1
+                    name: Kue Bolu
+                    description: Kue paling enak
+                    price: 10000
+                    images:
+                      - path/to/image.png
+                      - path/to/image.jpg
+        400:
+          description: validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: fail
+                errors:
+                  code: 400
+                  message: validation error
+                  details:
+                    name: product name cannot be empty
+                    price: product price cannot be empty
+                    images: image extension is not supported
+        500:
+          description: server error
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: 'fail'
+                errors:
+                  code: 500
+                  message: fail to create product and this is not your fault, please try again later
+  /api/products/{id}:
+    get:
+      tags:
+        - Products
+      security:
+        - cookieAuth: []
+      summary: get product by id
+      parameters:
+        - in: path
+          name: id
+          description: product id
+          schema:
+            type: number
+          required: true
+          example: 1
+                  
+      responses:
+        200:
+          description: product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                status: success
+                data:
+                  products:
+                    id: 1
+                    name: Kue Bolu
+                    description: Kue bolu paling enak
+                    price: 1000
+                    images:
+                      - path/to/image.png
+        404:
+          description: product with specified id is not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not found:
+                  $ref: '#/components/examples/NotFound'
+    put:
+      summary: update product
+      parameters:
+        - in: path
+          name: id
+          description: product id
+          schema:
+            type: number
+          required: true
+          example: 1
+      security:
+        - cookieAuth: []
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                images.removed:
+                  type: array
+                  description: List of image identifiers to remove
+                  items:
+                    type: string
+                images.new:
+                  type: array
+                  description: List of new images to upload
+                  items:
+                    type: string
+                    format: binary
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        200:
+          description: update product success
+  

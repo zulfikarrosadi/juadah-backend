@@ -642,7 +642,64 @@
                 "schema": {
                   "$ref": "#/components/schemas/SuccessResponse"
                 },
-                "example": null
+                "example": {
+                  "status": "success",
+                  "data": {
+                    "products": {
+                      "id": 1,
+                      "name": "updated kue bolu",
+                      "description": "updated kue bolu description",
+                      "price": 15000,
+                      "images": ["new/image/path.png"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "fail to update, validaiton error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "image error": {
+                    "value": {
+                      "status": "fail",
+                      "errors": {
+                        "code": 400,
+                        "message": "each product can only have 5 images at max"
+                      }
+                    }
+                  },
+                  "validation errors": {
+                    "value": {
+                      "status": "fail",
+                      "errors": {
+                        "code": 400,
+                        "message": "validation errors",
+                        "details": {
+                          "price": "price should be a number",
+                          "name": "name is required"
+                        }
+                      }
+                    }
+                  },
+                  "image not supported": {
+                    "value": {
+                      "status": "fail",
+                      "errors": {
+                        "code": 400,
+                        "message": "validation errors",
+                        "details": {
+                          "images": "invalid file format, please only upload file with .png or .jpg extension"
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }

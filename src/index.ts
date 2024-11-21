@@ -5,7 +5,7 @@ import cors from 'cors'
 import swaggerUI from 'swagger-ui-express'
 import sanitizeInput from './middlewares/sanitizeInput'
 const app = express()
-import swaggerDocument from '../openapi.json'
+import swaggerDocument from './openapi.json'
 import routes from './routes'
 
 const port = process.env.SERVER_PORT
