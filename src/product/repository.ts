@@ -131,7 +131,7 @@ class ProductRepository {
     return products
   }
 
-  async deleteProductById(id: number) {
+  async deleteProductById(id: bigint) {
     try {
       await this.prisma.products.delete({
         where: {

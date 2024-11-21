@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { ZodError, z } from 'zod'
 
 export const createProduct = z.object({
   name: z
@@ -7,33 +7,26 @@ export const createProduct = z.object({
   description: z
     .string({ message: 'product description is required' })
     .min(1, 'product description is required'),
-  price: z.string().transform((val) => {
-    const valInNumber = Number.parseFloat(val)
-    if (Number.isNaN(valInNumber)) {
-      throw new Error('product price is invalid')
-    }
-    return valInNumber
-  }),
+  price: z.string(),
   images: z.string().array().optional(),
 })
 
 export const updateProduct = z.object({
   name: z.string({ required_error: 'name is required' }),
   description: z.string({ required_error: 'description is required' }),
-  price: z.string({ required_error: 'price is required' }).transform((val) => {
-    const valInNumber = Number.parseFloat(val)
-    if (Number.isNaN(valInNumber)) {
-      throw new Error('product price is invalid')
-    }
-    return valInNumber
-  }),
+  price: z.string({ required_error: 'price is required' }),
   images: z.object({
     removed: z.array(z.string(), { required_error: 'this field is required' }),
   }),
 })
 
-export type CreateProduct = z.TypeOf<typeof createProduct>
-export type Product = z.TypeOf<typeof createProduct> & { id: bigint }
+export type CreateProduct = Omit<z.TypeOf<typeof createProduct>, 'price'> & {
+  price: number
+}
+export type Product = Omit<z.TypeOf<typeof createProduct>, 'price'> & {
+  id: bigint
+  price: number
+}
 export type UpdateProduct = z.TypeOf<typeof updateProduct>
 export type UpdateProductDataService = {
   name: string
@@ -44,6 +37,7 @@ export type UpdateProductDataService = {
     new: string[]
   }
 }
-export type FlattenUpdateProduct = Omit<UpdateProduct, 'images'> & {
+export type FlattenUpdateProduct = Omit<UpdateProduct, 'images' | 'price'> & {
   images: string[]
+  price: number
 }

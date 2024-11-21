@@ -16,6 +16,7 @@ interface ProductService {
     id: string,
     data: UpdateProductDataService,
   ): Promise<ApiResponse<Product>>
+  deleteProductById(id: string): Promise<ApiResponse<number>>
 }
 
 class ProductHandler {
@@ -81,6 +82,14 @@ class ProductHandler {
       return res.status(result.errors.code).json(result)
     }
     return res.status(200).json(result)
+  }
+
+  deleteProductById = async (req: Request<{ id: string }>, res: Response) => {
+    const result = await this.service.deleteProductById(req.params.id)
+    if (result.status === 'fail') {
+      return res.status(404).json(result)
+    }
+    return res.sendStatus(204)
   }
 }
 

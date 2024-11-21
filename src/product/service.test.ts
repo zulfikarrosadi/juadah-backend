@@ -41,6 +41,7 @@ describe('product service', () => {
       createProduct: jest.fn(),
       getProductById: jest.fn(),
       getProducts: jest.fn(),
+      deleteProductById: jest.fn(),
     } as unknown as jest.Mocked<ProductRepository>
 
     productService = new ProductService(productRepo, logger)
