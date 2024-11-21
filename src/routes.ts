@@ -68,6 +68,7 @@ router.put(
   validateInput(updateProduct),
   productHandler.updateProductById,
 )
+router.delete('/products/:id', productHandler.deleteProductById)
 router.post('/products/:id/payments', paymentHandler.requestOrderToken)
 router.get('/products/payments/:orderId', paymentHandler.checkOrderStatus)
 

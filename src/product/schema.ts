@@ -12,7 +12,6 @@ export const createProduct = z.object({
     if (Number.isNaN(valInNumber)) {
       throw new Error('product price is invalid')
     }
-    return valInNumber
   }),
   images: z.string().array().optional(),
 })
@@ -32,8 +31,13 @@ export const updateProduct = z.object({
   }),
 })
 
-export type CreateProduct = z.TypeOf<typeof createProduct>
-export type Product = z.TypeOf<typeof createProduct> & { id: bigint }
+export type CreateProduct = Omit<z.TypeOf<typeof createProduct>, 'price'> & {
+  price: number
+}
+export type Product = Omit<z.TypeOf<typeof createProduct>, 'price'> & {
+  id: bigint
+  price: number
+}
 export type UpdateProduct = z.TypeOf<typeof updateProduct>
 export type UpdateProductDataService = {
   name: string

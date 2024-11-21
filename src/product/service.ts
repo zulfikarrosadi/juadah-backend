@@ -1,5 +1,5 @@
 import type { JsonValue } from '@prisma/client/runtime/library'
-import { NotFoundError } from '../lib/Error'
+import { BadRequestError, NotFoundError } from '../lib/Error'
 import { type Logger, getContext } from '../lib/logger'
 import type ApiResponse from '../schema'
 import type {
@@ -28,7 +28,7 @@ interface ProductRepository {
       id: bigint
     }[]
   >
-  deleteProductById(id: number): Promise<{ affectedRows: number }>
+  deleteProductById(id: bigint): Promise<{ affectedRows: number }>
   updateProductById(
     id: bigint,
     data: FlattenUpdateProduct,
@@ -45,7 +45,29 @@ class ProductService {
     data: CreateProduct,
   ): Promise<ApiResponse<Product>> => {
     try {
-      const newProduct = await this.repo.createProduct(data)
+      let priceInFloat: undefined | number
+      if (typeof data.price === 'string') {
+        priceInFloat = Number.parseFloat(data.price)
+      } else {
+        priceInFloat = data.price
+      }
+      if (Number.isNaN(priceInFloat) || !priceInFloat) {
+        const context = getContext()
+        this.logger(
+          'error',
+          'price parsing faiil',
+          'service',
+          'createProduct',
+          context,
+        )
+        throw new BadRequestError(
+          'fail to create product, make sure to insert correct information and try again',
+        )
+      }
+      const newProduct = await this.repo.createProduct({
+        ...data,
+        price: priceInFloat,
+      })
       const result = await this.repo.getProductById(newProduct.id)
 
       return {
@@ -114,8 +136,8 @@ class ProductService {
   }
 
   deleteProductById = async (id: string): Promise<ApiResponse<number>> => {
-    const parsedId = Number.parseInt(id, 10)
     try {
+      const parsedId = BigInt(id)
       if (Number.isNaN(parsedId)) {
         throw new NotFoundError(
           "you are trying to delete the product that does'nt exists",
@@ -141,7 +163,7 @@ class ProductService {
         status: 'fail',
         errors: {
           code: 404,
-          message: error.message || error,
+          message: 'fail to delete product, product not found',
         },
       }
     }
@@ -158,6 +180,25 @@ class ProductService {
           "you are trying to update the product that doesn't exists",
         )
       }
+      let priceInFloat: undefined | number
+      if (typeof data.price === 'string') {
+        priceInFloat = Number.parseFloat(data.price)
+      } else {
+        priceInFloat = data.price
+      }
+      if (Number.isNaN(priceInFloat) || !priceInFloat) {
+        const context = getContext()
+        this.logger(
+          'error',
+          'price parsing faiil',
+          'service',
+          'createProduct',
+          context,
+        )
+        throw new BadRequestError(
+          'fail to create product, make sure to insert correct information and try again',
+        )
+      }
 
       const oldProduct = await this.repo.getProductById(parsedId)
       const allImages = [
@@ -172,7 +213,7 @@ class ProductService {
       const updatedProduct = await this.repo.updateProductById(parsedId, {
         name: data.name,
         description: data.description,
-        price: data.price,
+        price: priceInFloat,
         images: finalImages,
       })
 
