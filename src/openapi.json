@@ -19,6 +19,9 @@
     },
     {
       "name": "Products"
+    },
+    {
+      "name": "Payments"
     }
   ],
   "components": {
@@ -95,6 +98,123 @@
           "images": {
             "type": "string",
             "format": "binary"
+          }
+        }
+      },
+      "PaymentRequest": {
+        "type": "object",
+        "required": ["transaction_details", "customer_details"],
+        "properties": {
+          "transaction_details": {
+            "type": "object",
+            "required": ["product_id", "gross_amount", "product_count_total"],
+            "properties": {
+              "product_id": {
+                "type": "number"
+              },
+              "gross_amount": {
+                "type": "number"
+              },
+              "product_count_total": {
+                "type": "number"
+              }
+            }
+          },
+          "customer_details": {
+            "type": "object",
+            "required": ["email", "fullname", "address_id"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "fullname": {
+                "type": "string"
+              },
+              "address_id": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "OrderTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "redirect_url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "OrderStatus": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string"
+          },
+          "transaction_id": {
+            "type": "string"
+          },
+          "transaction_status": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "total_price": {
+            "type": "string"
+          },
+          "completed_at": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "OrderWebhookPayload": {
+        "type": "object",
+        "properties": {
+          "transaction_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status_code": {
+            "type": "string"
+          },
+          "transaction_status": {
+            "type": "string",
+            "enum": ["capture", "settlement", "pending", "deny", "cancel", "expire", "failure", "refund", "partial_refund", "authorize"]
+          },
+          "signature_key": {
+            "type": "string"
+          },
+          "gross_amount": {
+            "type": "string"
+          },
+          "order_id": {
+            "type": "string"
+          },
+          "transaction_id": {
+            "type": "string"
+          },
+          "payment_type": {
+            "type": "string"
+          },
+          "fraud_status": {
+            "type": "string",
+            "enum": ["accept", "deny"]
           }
         }
       },
@@ -699,6 +819,154 @@
                       }
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}/payments": {
+      "post": {
+        "tags": ["Payments"],
+        "summary": "Request an order token for a product payment",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "description": "product id",
+            "schema": {
+              "type": "number"
+            },
+            "required": true,
+            "example": 1
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order token created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string", "example": "success"},
+                    "data": {
+                      "$ref": "#/components/schemas/OrderTokenResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/payments/{orderId}": {
+      "get": {
+        "tags": ["Payments"],
+        "summary": "Check the status of an order",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "orderId",
+            "description": "The ID of the order to check",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order status retrieved successfully",
+            "content": {
+              "application/json": {
+                 "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string", "example": "success"},
+                    "data": {
+                      "$ref": "#/components/schemas/OrderStatus"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Order not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "not found": {
+                    "$ref": "#/components/examples/NotFound"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/payments": {
+      "post": {
+        "tags": ["Payments"],
+        "summary": "Webhook for payment provider to send order updates",
+        "description": "This endpoint is intended to be called by the payment provider (e.g., Midtrans) to notify the server about transaction status changes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderWebhookPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook received successfully"
+          },
+          "400": {
+            "description": "Bad Request - Invalid payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
